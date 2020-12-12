@@ -1,0 +1,20 @@
+{
+  "name": "ES6",
+  "version": "1.0.0",
+  "description": "",
+  "main": "var-let-const.js",
+  "scripts": {
+    "test0": "mocha --recursive test",
+    "test": "mocha test/bootstrap.js --recursive test",
+    "server": "http-server src",
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^8.0.1",
+    "puppeteer": "^5.0.0"
+  }
+}
