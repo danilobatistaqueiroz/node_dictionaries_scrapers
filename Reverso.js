@@ -1,27 +1,57 @@
 const scraperObject = {
-    async scraper(browser, language, englishWord){
-        url = 'https://context.reverso.net/translation/'+language+'/'+englishWord;
+    getFields(html, field){
+        ini = html.indexOf(field)
+        fieldLength = field.length+1
+        data = ''
+        if(ini>0){
+            end = html.indexOf(']')
+            data = html.substring(ini+fieldLength,end+1)
+        }
+        return data;
+    },
+    async scraper(browser, language, words){
         let page = await browser.newPage();
-        await page.goto(url);
-        await page.waitForSelector('.results');
-        let twords = await page.$eval('.left-content #top-results #translations-content', words => {
-            links = words.querySelectorAll('.translation')
-            translations = []
-            for (let i = 0; i < links.length; i++) {
-                if(links[i]==undefined)
-                    continue
-                ini = links[i].outerHTML.indexOf('data-pos=')
-                data = ''
-                if(ini>0){
-                    end = links[i].outerHTML.indexOf(']')
-                    data = links[i].outerHTML.substring(ini+10,end+1)
-                }
-                if(translations.find(t => t.type==data)==undefined)
-                    translations.push({type:data,value:links[i].textContent.trim()})
+        await page.exposeFunction('getField', (html, field) => {
+            ini = html.indexOf(field)
+            fieldLength = field.length+1
+            data = ''
+            if(ini>0){
+                end = html.indexOf(']')
+                data = html.substring(ini+fieldLength,end+1)
             }
-            return translations
-        })
-        return twords
+            return data;
+        });
+        allTranslations = ''
+        for(i = 0; i < words.length; i++) {
+            englishWord = words[i]
+            console.log(englishWord)
+            url = 'https://context.reverso.net/translation/'+language+'/'+englishWord;
+            await page.goto(url);
+            await page.waitForSelector('.results');
+            let twords
+            try {
+                twords = await page.$eval('.left-content #top-results #translations-content', content => {
+                    let datapos = 'data-pos='
+                    let datafreq = 'data-freq='
+                    links = content.querySelectorAll('.translation')
+                    translations = []
+                    for (let i = 0; i < links.length; i++) {
+                        if(links[i]==undefined)
+                            continue
+                        termType = getField(links[i].outerHTML, datapos);
+                        freq = getField(links[i].outerHTML, datafreq)
+                        translations.push({type:termType,freq:freq,value:links[i].textContent.trim()})
+                    }
+                    return translations
+                })
+                await twords.forEach(async w => {
+                    allTranslations += (w.value+',');
+                });
+                allTranslations += '\n'
+            } catch (err) {
+                console.log(err)
+            }
+        }
     }
 }
 
