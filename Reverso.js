@@ -21,10 +21,7 @@ const scraperObject = {
             }
             return translations
         })
-        process.stdout.write(englishWord+'\t')
-        for(i = 0; i < twords.length; i++){
-            process.stdout.write(twords[i].value+',');
-        }
+        return twords
     }
 }
 

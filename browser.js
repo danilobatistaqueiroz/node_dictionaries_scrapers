@@ -14,6 +14,11 @@ async function startBrowser () {
     return browser;
 }
 
+async function stopBrowser(browserInstance) {
+    browser = await browserInstance;
+    await browser.close();
+}
+
 module.exports = {
-    startBrowser
+    startBrowser, stopBrowser
 };
