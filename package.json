@@ -7,13 +7,14 @@
     "test0": "mocha --recursive test",
     "test": "mocha test/bootstrap.js --recursive test",
     "server": "http-server src",
-    "start": "node index.js"
+    "start": "node src/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "chai": "^4.2.0",
+    "lodash": "^4.17.20",
     "mocha": "^8.0.1",
     "puppeteer": "^5.0.0"
   }
