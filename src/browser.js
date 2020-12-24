@@ -1,11 +1,16 @@
+"use strict"
 const puppeteer = require('puppeteer');
+const json = require('../config.json');
 
 async function startBrowser () {
     let browser;
     try {
         browser = await puppeteer.launch({
-            headless: true, 
-            args: ["--disable-setuid-sandbox"],
+            headless: json.headless, 
+            args: [
+                `--disable-setuid-sandbox`,
+                //`--proxy-server=socks5://127.0.0.1:9050`
+            ],
             'ignoreHTTPSErrors': true
         });
     } catch (err) {
@@ -15,7 +20,7 @@ async function startBrowser () {
 }
 
 async function stopBrowser(browserInstance) {
-    browser = await browserInstance;
+    let browser = await browserInstance;
     await browser.close();
 }
 

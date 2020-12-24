@@ -1,0 +1,143 @@
+<script>
+    let googleFull = '';
+    let googleThree = '';
+    let reversoFull = '';
+    let reversoThree = '';
+    let lingueeFull = '';
+    let lingueeThree = '';
+    
+    function threeReversoFirst(){
+        reversoFull = threeFirst('dvReverso','btReversoMin','btReversoMax');
+    }
+    function threeGoogleFirst(){
+        googleFull = threeFirst('dvGoogle','btGoogleMin','btGoogleMax');
+    }
+    function threeLingueeFirst(){
+        lingueeFull = threeFirst('dvLinguee','btLingueeMin','btLingueeMax');
+    }
+    
+    function threeFirst(site, siteBtMin, siteBtMax) {
+      let g = document.getElementById(site).firstChild.textContent;
+      let a, b, c, d, x = '';
+      if (g != '') {
+        a = g.indexOf(',');
+      if(a==-1) a = g.length;
+        b = g.indexOf(',',a+1);
+      if(b==-1) b = a;
+        c = g.indexOf(',',b+1);
+      if(c==-1) c = b;
+        d = g.indexOf(',',c+1);
+      if(d==-1) d = c;
+        x = g.substring(0,d);
+    
+        let siteFull = document.getElementById(site).firstChild.textContent;
+        document.getElementById(site).firstChild.textContent = x;
+        document.getElementById(siteBtMin).style.display='none';
+        document.getElementById(siteBtMax).style.visibility='visible';
+        return siteFull;
+      }
+    }
+    
+    function showReversoFull(){
+        reversoThree = showFull('dvReverso', reversoFull, 'btReversoMin', 'btReversoMax');
+    }
+    function showGoogleFull(){
+        googleThree = showFull('dvGoogle', googleFull, 'btGoogleMin', 'btGoogleMax');
+    }
+    function showLingueeFull(){
+        lingueeThree = showFull('dvLinguee', lingueeFull, 'btLingueeMin', 'btLingueeMax');
+    }
+    
+    function showFull(site, siteFull, siteBtMin, siteBtMax) {
+        siteThree = siteFull;
+        document.getElementById(site).firstChild.textContent = siteFull;
+        document.getElementById(siteBtMin).style.display='inline';
+        document.getElementById(siteBtMax).style.visibility='hidden';
+        return siteThree;
+    }
+    
+    
+    let yandexMax = ()=>{
+        document.getElementById('dvYandex').style.display='block';
+        document.getElementById('btYandexMax').style.visibility='hidden';
+    }
+    let yandexMin = ()=>{
+        document.getElementById('dvYandex').style.display='none';
+        document.getElementById('btYandexMax').style.visibility='visible';
+    }
+    
+    let deeplMax = ()=>{
+        document.getElementById('dvDeepl').style.display='block';
+        document.getElementById('btDeeplMax').style.visibility='hidden';
+    }
+    let deeplMin = ()=>{
+        document.getElementById('dvDeepl').style.display='none';
+        document.getElementById('btDeeplMax').style.visibility='visible';
+    }
+    
+    let loadScripts = ()=>{
+        threeReversoFirst();
+        threeGoogleFirst();  
+        threeLingueeFirst();  
+    
+        document.getElementById('btReversoMax').addEventListener('click',showReversoFull);
+        document.getElementById('btReversoMin').addEventListener('click',threeReversoFirst);
+        document.getElementById('btGoogleMax').addEventListener('click',showGoogleFull);
+        document.getElementById('btGoogleMin').addEventListener('click',threeGoogleFirst);
+        document.getElementById('btLingueeMax').addEventListener('click',showLingueeFull);
+        document.getElementById('btLingueeMin').addEventListener('click',threeLingueeFirst);
+    
+        document.getElementById('btDeeplMin').addEventListener('click',deeplMin);
+        document.getElementById('btDeeplMax').addEventListener('click',deeplMax);
+        document.getElementById('btYandexMin').addEventListener('click',yandexMin);
+        document.getElementById('btYandexMax').addEventListener('click',yandexMax);
+    }
+    
+    window.onload = loadScripts();
+    
+    </script>
+    
+    <font color="#3ff"><b>{{word}}</b></font>
+    <br>
+    {{ipa1}} <font color="#3ff"><b>--</b></font> {{ipa2}}
+    <hr id=answer>
+    {{mp3}}
+    <br>
+    
+    <font color="#3ff"><b>Reverso:</b></font>
+    <button  id="btReversoMax">+</button>
+    <br>
+    <div  id="dvReverso">{{reverso}} <button id="btReversoMin">-</button></div>
+    
+    <font color="#3ff"><b>Google:</b></font>
+    <button id="btGoogleMax">+</button>
+    <br>
+    <div id="dvGoogle">{{google}} <button id="btGoogleMin">-</button></div>
+    
+    
+    <font color="#3ff"><b>Linguee:</b></font><button id="btLingueeMax">+</button>
+    <div id="dvLinguee">{{linguee}} <button id="btLingueeMin">-</button></div>
+    
+    
+    <font color="#3ff"><b>Deepl:</b></font> 
+    <button id="btDeeplMax">+</button>
+    <br>
+    <div id="dvDeepl" style="display:none">{{deepl}}
+        <button id="btDeeplMin">-</button>
+    </div>
+    
+    
+    <font color="#3ff"><b>Yandex:</b></font>
+    <button id="btYandexMax">+</button>
+    <div id="dvYandex" style="display:none">{{yandex}} 
+        <button id="btYandexMin">-</button>
+    </div>
+    
+    <hr>
+    <font color="#3ff"><b>Phrases:</b></font>
+    <br>
+    <div id="en-phrases">{{en-phrases}}</div>
+    <hr>
+    <font color="#3ff"><b>Frases:</b></font>
+    <br>
+    <div id="en-phrases">{{pt-phrases}}</div>

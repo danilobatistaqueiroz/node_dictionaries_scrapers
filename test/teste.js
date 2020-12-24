@@ -1,5 +1,7 @@
-tr = ['a', 'b', 'c ', ' d']
+let mains = ['aa','bb','cc','aabb','xddx'];
 
-tr = tr.map(t => t.trim())
+let others = [{fr:3,tx:'cc'}, {fr:6,tx:'dd'}, {fr:4,tx:'aa'}, {fr:1,tx:'cbb'}];
 
-console.log(tr.toString())
+others.sort((a,b) => b.fr - a.fr);
+
+console.log(others);

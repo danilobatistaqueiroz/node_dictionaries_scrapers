@@ -1,6 +1,8 @@
 {
-    "fileName":"5001-6000",
+    "fileName":"4001-5000",
     "fileExt":"csv",
     "language":"portuguese",
-    "site":"cambridge"
+    "site":"lingueeauto",
+    "env":"real",
+    "headless":true
 }
