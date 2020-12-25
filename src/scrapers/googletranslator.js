@@ -1,11 +1,17 @@
+"use strict"
 var array = require('lodash/array');
 var files = require('../files');
 var util = require('../util');
 const colors = require('colors/safe');
 var dateFormat = require('dateformat');
+var json = require('../../config.json');
 
 const scraperObject = {
-    delay : async (ms) => new Promise(res => setTimeout(res, ms)),
+    async typeWord(page, word) {
+        await page.$eval('textarea[class="er8xn"]', el => el.value = '');
+        await page.keyboard.type(word);
+        await page.waitForSelector('span[class="VIiyi"]');
+    },
     async scrape(browser) {
 
         let words = files.loadInputFile();
@@ -15,8 +21,8 @@ const scraperObject = {
         let sourceLang = 'en', targetLang = 'pt';
 
         let count = 0;
-        let startword = 625;
-        if(startword==0){
+        let startLine = parseInt(json.startLine);
+        if(startLine==0){
             files.initializeLog();
             files.initializeFile();
         }
@@ -28,7 +34,7 @@ const scraperObject = {
 
         for (let word of words) {
             count++;
-            if (count < startword) {
+            if (count < startLine) {
                 continue;
             }
             console.log(word);
@@ -40,49 +46,54 @@ const scraperObject = {
                 continue;
             }
 
-            await page.$eval('textarea[class="er8xn"]', el => el.value = '');
-            await page.keyboard.type(word);
-            await page.waitForSelector('span[class="VIiyi"]');
+            await this.typeWord(page, word);
             
             await this.delay(1000);
 
             let value = await page.$eval('textarea[class="er8xn"]', el => el.value);
             if(value!=word){
-                console.log(colors.red('nao encontrou'));
-                files.appendLog(word,'fail','nao encontrou');
-                files.appendFile(word+'\t\n');
-                continue;
+                this.typeWord(page, word);
+            } else {
+                value = await page.$eval('textarea[class="er8xn"]', el => el.value);
+                if(value!=word){
+                    console.log(colors.red('nao encontrou'));
+                    files.appendLog(word,'fail','nao encontrou');
+                    files.appendFile(word+'\t\n');
+                    continue;
+                }
             }
 
             const mainTranslations = await page.evaluate(() => {
-                let main = document.querySelectorAll('span[class="J0lOec"]');
-                text = [];
-                main.forEach((m) => {
-                    let term = main.querySelector('.VIiyi');
-                    let sex = main.querySelector('.NlvNvf');
-                    if(sex !=null && sex.textContent=='feminino')
-                        continue;
-                    if (term.childNodes[0].nodeName != '#text') {
-                        let list = document.querySelectorAll('span[jsname="W297wb"]');
-                        list.forEach((l) => {
-                            text.push(l.textContent);
-                        });
-                    } else {
-                        text.push(term.textContent);
-                    }
-                });
-                return text;
+                //let main = document.querySelectorAll('span[class="J0lOec"]');
+                let main = document.querySelectorAll('.VIiyi');
+                let sexs = document.querySelectorAll('.NlvNvf');
+                list = [];
+                let term;
+                if(sexs != null && sexs.length==2) {
+                    term = main[1];
+                } else {
+                    term = main[0];
+                }
+                if (term.childNodes[0].nodeName != '#text') {
+                    let wordsTr = document.querySelectorAll('span[jsname="W297wb"]');
+                    wordsTr.forEach((w) => {
+                        list.push({"text":w.innerText,"frequency":undefined});
+                    });
+                } else {
+                    list.push({"text":term.innerText,"frequency":undefined});
+                }
+                return list;
             });
 
             const otherTranslations = await page.evaluate(() => {
                 let others = document.querySelectorAll('.KnIHac');
                 let blocks = document.querySelectorAll('.YF3enc');
                 list = [];
-                for(let i = 0; i < others.length; i++) {
+                for(let o = 0; o < others.length; o++) {
                     frequency = 0;
-                    let block1 = blocks[i].childNodes[0];
-                    let block2 = blocks[i].childNodes[1];
-                    let block3 = blocks[i].childNodes[2];
+                    let block1 = blocks[o].childNodes[0];
+                    let block2 = blocks[o].childNodes[1];
+                    let block3 = blocks[o].childNodes[2];
                     let blockGray = 'fXx9Lc';
                     if (block1.classList[1] == blockGray) {
                         frequency = 0;
@@ -98,43 +109,50 @@ const scraperObject = {
                 return list;
             });
 
-            if(otherTranslations.length==0 || mainTranslations.length==0){
+            if(otherTranslations.length==0 && mainTranslations.length==0){
                 console.log(colors.red('nao encontrou tradução'));
-                files.appendLog(word,fail,'nao encontrou tradução');
+                files.appendLog(word,'fail','nao encontrou tradução');
                 files.appendFile(word+'\t\n');
                 continue;
             }
 
             otherTranslations.sort((a,b) => b.frequency - a.frequency);
 
-            text = [];
+            let allTranslations = [];
             for(let m = 0; m < mainTranslations.length; m++) {
-                otherTranslations.forEach((o) => {
-                    if(o.substring(3).toLowerCase() == mainTranslations[m].toLowerCase()) {
-                        console.log('slice:'+m);
+                let main = mainTranslations[m];
+                for(let o = 0; o < otherTranslations.length; o++) {
+                    let other = otherTranslations[o];
+                    if(other.text.toLowerCase() == main.text.toLowerCase()) {
                         mainTranslations.splice(m,1);
                         m--;
+                        break;
                     }
-                });
+                }
             }
-            mainTranslations.forEach((m) => text.push(m));
-            otherTranslations.forEach((o) => text.push(o));
-            text = array.uniq(text);
 
-            console.log(text.join(','));
-            files.appendFile(word+'\t'+text.join(',') + '\n');
+            mainTranslations.forEach((main) => allTranslations.push(main));
+            otherTranslations.forEach((other) => allTranslations.push(other));
+            allTranslations = array.uniq(allTranslations);
 
-            for (let i = 0; i < text.length; i++) {
-                if (frequency[i] != undefined)
-                    text[i] = '(' + frequency[i] + ')' + text[i].trim();
+            let listText = [];
+            for (let i = 0; i < allTranslations.length; i++) {
+                if (allTranslations[i].frequency != undefined)
+                    listText.push('(' + allTranslations[i].frequency + ')' + allTranslations[i].text.trim());
+                else
+                    listText.push(allTranslations[i].text.trim());
             }
+
+            console.log(listText.join(','));
+            files.appendFile(word+'\t'+listText.join(',') + '\n');
 
             await this.delay(2000);
         }
         let end = new Date()
         files.appendLog('', '', dateFormat(end, "h:MM:ss l"));
         files.appendLog('', '', 'total de palavras:' + count);
-    }
+    },
+    delay : async (ms) => new Promise(res => setTimeout(res, ms)),
 }
 
 module.exports = scraperObject;

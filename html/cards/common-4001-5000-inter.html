@@ -6,7 +6,6 @@
     let lingueeFull = '';
     let lingueeThree = '';
     
-    
     function threeReversoFirst(){
         reversoFull = threeFirst('dvReverso','btReversoMin','btReversoMax');
     }
@@ -37,7 +36,7 @@
             comma3 = comma2;
             btMaxHide = true;
         }
-        comma4 = divContent.indexOf(',',comma3+1);
+        comma4 = divContent.indexOf(',',comma4+1);
         if(comma4==-1) {
             comma4 = comma3;
             btMaxHide = true;
@@ -111,7 +110,7 @@
     
     </script>
     
-    <font color="#3ff"><b>{{word}}</b></font>
+    <font color="#3ff"><b>slipped</b></font>
     <br>
     {{ipa1}} <font color="#3ff"><b>--</b></font> {{ipa2}}
     <hr id=answer>
@@ -121,29 +120,29 @@
     <font color="#3ff"><b>Reverso:</b></font>
     <button  id="btReversoMax">+</button>
     <br>
-    <div  id="dvReverso">{{reverso}} <button id="btReversoMin">-</button></div>
+    <div  id="dvReverso">(8050)ace,(2000)free,(500)ox,(100)nothing,(5)great <button id="btReversoMin">-</button></div>
     
     <font color="#3ff"><b>Google:</b></font>
     <button id="btGoogleMax">+</button>
     <br>
-    <div id="dvGoogle">{{google}} <button id="btGoogleMin">-</button></div>
+    <div id="dvGoogle">(3)no,(3)please,(2)fight,(1)yes,(1)zero <button id="btGoogleMin">-</button></div>
     
     
     <font color="#3ff"><b>Linguee:</b></font><button id="btLingueeMax">+</button>
-    <div id="dvLinguee">{{linguee}} <button id="btLingueeMin">-</button></div>
+    <div id="dvLinguee">no,please,fight,yes,zero <button id="btLingueeMin">-</button></div>
     
     
     <font color="#3ff"><b>Deepl:</b></font> 
     <button id="btDeeplMax">+</button>
     <br>
-    <div id="dvDeepl" style="display:none">{{deepl}}
+    <div id="dvDeepl" style="display:none">worked, problems
         <button id="btDeeplMin">-</button>
     </div>
     
     
     <font color="#3ff"><b>Yandex:</b></font>
     <button id="btYandexMax">+</button>
-    <div id="dvYandex" style="display:none">{{yandex}} 
+    <div id="dvYandex" style="display:none">haul, harbor, last 
         <button id="btYandexMin">-</button>
     </div>
     

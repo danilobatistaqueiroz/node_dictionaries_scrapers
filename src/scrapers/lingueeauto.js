@@ -52,6 +52,7 @@ const scraperObject = {
         let content = util.getDom(html,selector);
         return content;
     },
+    delay : async (ms) => new Promise(res => setTimeout(res, ms)),
     async scrape(browser){
         let words = files.loadInputFile();
         let page = await browser.newPage();
@@ -59,7 +60,7 @@ const scraperObject = {
         files.initializeFile();
         let selector = '.autocompletion';
         for(let word of words){
-            util.sleepFor(this.getSleep());
+            await this.delay(3000);
             console.log(word);
             let content = await this.getContent(page,word,selector);
             if(content==''){

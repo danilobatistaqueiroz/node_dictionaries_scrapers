@@ -94,7 +94,7 @@ const scraperObject = {
             let definitions = [];
             let divDefinitions = content.querySelectorAll('.def.ddef_d.db');
             for(let d = 0; d < divDefinitions.length; d++){
-                definitions.push(divDefinitions[0].textContent);
+                definitions.push(divDefinitions[d].textContent+'. ');
             }
             for(let e = 0; e < entryBodies.length; e++){
                 let blocks = entryBodies[e].querySelectorAll('.sense-block.pr.dsense.dsense-noh');

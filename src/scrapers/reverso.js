@@ -16,28 +16,6 @@ const reverso = {
         }
         return data;
     },
-    getBoldTerms(translations){
-        let bold = [];
-        if(translations.length <= 3){
-            bold = translations;
-        } else {
-            let halfFirst = parseInt(translations[0].freq)/2;
-            let halfSecond = parseInt(translations[1].freq)/2;
-            let second = parseInt(translations[1].freq);
-            let third = parseInt(translations[2].freq);
-            if(halfFirst > second) {
-                bold.push(translations[0]);
-            } else if(halfSecond > third) {
-                bold.push(translations[0]);
-                bold.push(translations[1]);
-            } else {
-                bold.push(translations[0]);
-                bold.push(translations[1]);
-                bold.push(translations[2]);
-            }
-        }
-        return bold;
-    }
 }
 
 const scraperObject = {
@@ -46,7 +24,7 @@ const scraperObject = {
         let page = await browser.newPage();
 
         let count = 0;
-        let startword = 7;
+        let startword = 0;
         if(startword==0){
             files.initializeLog();
             files.initializeFile();
@@ -96,12 +74,12 @@ const scraperObject = {
             });
 
             if(translations.length > 0){
-                let bold = reverso.getBoldTerms(translations);
-                for(let b = 0; b < bold.length; b++){
-                    files.appendFile(`(${bold[b].freq})${bold[b].value},`);
-                }
-                files.appendFile('\t');
-                for(let t = bold.length; t < translations.length; t++){
+                // let bold = reverso.getBoldTerms(translations);
+                // for(let b = 0; b < bold.length; b++){
+                //     files.appendFile(`(${bold[b].freq})${bold[b].value},`);
+                // }
+                //files.appendFile('\t');
+                for(let t = 0; t < translations.length; t++){
                     files.appendFile(`(${translations[t].freq})${translations[t].value},`);
                 }
             } else {
