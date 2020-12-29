@@ -46,7 +46,7 @@ const howjsay = {
     downloadMp3(audio){
         const https = require('https');
         let fileName = this.getFileName(audio);
-        const file = fs.createWriteStream(`output/mp3/howjsay-${fileName}`);
+        const file = fs.createWriteStream(`mp3/howjsay-${fileName}`);
         const request = https.get(audio, function(response) {
             response.pipe(file);
         });
@@ -74,17 +74,23 @@ const scraperObject = {
         await page.setDefaultTimeout(howjsay.getTimeout());
         await page.setDefaultNavigationTimeout(howjsay.getTimeout());
         let selector = '.alphContain.list-grid';
+
         let count = 0;
-        let startword = 648
-        if(startword==0){
+        let startLine = parseInt(json.startLine);
+        if(startLine==0){
+            if(files.exists()) {
+                files.appendLog('',fail,'arquivo existente!');
+                return;
+            }
             files.initializeLog();
             files.initializeFile();
         }
         let ini = new Date()
         files.appendLog('','',dateFormat(ini, "h:MM:ss l"));
+
         for(let word of words){
             count++;
-            if(count < startword) {
+            if(count < startLine) {
                 continue;
             }
             util.sleepFor(this.getSleep());

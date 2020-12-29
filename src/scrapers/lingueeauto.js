@@ -4,6 +4,7 @@ var files = require('../files');
 var util = require('../util');
 const json = require('../../config.json');
 const colors = require('colors/safe');
+var dateFormat = require('dateformat');
 
 const fail = util.result.fail;
 const success = util.result.success;
@@ -43,9 +44,9 @@ const lingueeauto = {
 
 const scraperObject = {
     async getContent(page, word, selector){
-        let result = await lingueeauto.queryAuto(page, word, selector);
-        if(result==fail){
-            console.log(color.red('fail'));
+        let queryResult = await lingueeauto.queryAuto(page, word, selector);
+        if(queryResult.result==fail){
+            console.log(colors.red('fail'));
             return '';
         }
         let html = await page.content();
@@ -56,12 +57,26 @@ const scraperObject = {
     async scrape(browser){
         let words = files.loadInputFile();
         let page = await browser.newPage();
-        files.initializeLog();
-        files.initializeFile();
+        let count = 0;
+        let startLine = parseInt(json.startLine);
+        if(startLine==0){
+            if(files.exists()) {
+                files.appendLog('',fail,'arquivo existente!');
+                return;
+            }
+            files.initializeLog();
+            files.initializeFile();
+        }
+        let ini = new Date()
+        files.appendLog('','',dateFormat(ini, "h:MM:ss l"));
         let selector = '.autocompletion';
         for(let word of words){
-            await this.delay(3000);
             console.log(word);
+            count++;
+            if (count < startLine) {
+                continue;
+            }
+            await this.delay(3000);
             let content = await this.getContent(page,word,selector);
             if(content==''){
                 files.appendLog(word,fail,'nao encontrou');

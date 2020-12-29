@@ -1,159 +1,254 @@
+<style>
+body {
+  font-family: arial;
+  font-size: 15px;
+  /*text-align: center;*/
+  color: white;
+  background-color: black;
+}
+</style>
+
 <script>
-    let googleFull = '';
-    let googleThree = '';
-    let reversoFull = '';
-    let reversoThree = '';
-    let lingueeFull = '';
-    let lingueeThree = '';
+    let sites = ['Reverso','Google','Linguee','Cambridge','Deepl','Yandex'];
+
+    let fullSiteText = {};
+    let mainSiteText = {};
+
+    function getAllFullSpanText(){
+        for( site of sites)
+            fullSiteText[site] = getSpanText(site);
+    }
+    function getAllMainSpanText(){
+        for( site of sites)
+            mainSiteText[site] = getMainText(site);
+    }
+
+    function getSpanText(site){
+        return document.getElementById('dv'+site).querySelector('span').innerText;
+    }
+    function setSpanText(site, text){
+        return document.getElementById('dv'+site).querySelector('span').innerText = text;
+    }
+    function setSpanHtml(site, html){
+        document.getElementById('dv'+site).querySelector('span').innerHTML = html;
+    }
     
-    function threeReversoFirst(){
-        reversoFull = threeFirst('dvReverso','btReversoMin','btReversoMax');
+    function getMainText(site) {
+        let content = fullSiteText[site];
+        let comma1, comma2, comma3, comma4 = '';
+        if (content != '') {
+            comma1 = content.indexOf(',');
+            if(comma1==-1) {
+                comma1 = content.length;
+            }
+            comma2 = content.indexOf(',',comma1+1);
+            if(comma2==-1) {
+                comma2 = content.length;
+            }
+            comma3 = content.indexOf(',',comma2+1);
+            if(comma3==-1) {
+                comma3 = content.length;
+            }
+            comma4 = content.indexOf(',',comma3+1);
+            if(comma4==-1) {
+                comma4 = content.length;
+            }
+            content =  content.substring(0,comma4);
+        }
+        return content;
     }
-    function threeGoogleFirst(){
-        googleFull = threeFirst('dvGoogle','btGoogleMin','btGoogleMax');
+
+    function setMainText(site){
+        setSpanText(site, mainSiteText[site]);
+        bold(site);
+        //createMaxButton(site);
+        //removeMinButton(site);
+        return content;
     }
-    function threeLingueeFirst(){
-        lingueeFull = threeFirst('dvLinguee','btLingueeMin','btLingueeMax');
+
+    function removeMaxButton(site){
+        let bt = document.getElementById('bt'+site+'Max');
+        if(bt!=null) bt.remove();
+    }
+    function removeMinButton(site){
+        let bt = document.getElementById('bt'+site+'Min');
+        if(bt!=null) bt.remove();
     }
     
-    function threeFirst(dvSite, siteBtMin, siteBtMax) {
-      let divContent = document.getElementById(dvSite).firstChild.textContent;
-      let comma1, comma2, comma3, comma4, contentThreeFirst = '';
-      let btMaxHide = false;
-      if (divContent != '') {
-        comma1 = divContent.indexOf(',');
-        if(comma1==-1) {
-            comma1 = divContent.length;
-            btMaxHide = true;
+    function showFullText(site) {
+        setSpanText(site, mainSiteText[site]);
+        bold(site);
+        createMinButton(site);
+        removeMaxButton(site);
+        return txtFull;
+    }
+
+    function createMinButton(site){
+        bt = document.createElement('BUTTON');
+        id = 'bt'+site+'Min';
+        bt.setAttribute('id',id);
+        bt.innerText = '-';
+        div = document.getElementById('dv'+site).innerHTML;
+        document.getElementById('dv'+site).innerHTML = div + bt.outerHTML;
+        document.getElementById(id).style.display='inline';
+        document.getElementById(id).addEventListener('click', eval('(setMainText("'+site+'"))') );
+    }
+    
+    function createMaxButton(site){
+        bt = document.createElement('BUTTON');
+        id = 'bt'+site+'Max';
+        bt.setAttribute('id',id);
+        bt.innerText = '+';
+        div = document.getElementById('dv'+site).innerHTML;
+        document.getElementById('dv'+site).innerHTML = bt.outerHTML + div;
+        //click = `showFullText("${site}")`;
+        document.getElementById(id).style.display='inline';
+        //document.getElementById(id).addEventListener('click', eval(`(${click})`) );
+    }
+
+    function getFrequencies(content) {
+        lRound=-1;
+        rRound=-1;
+        frequencies = [];
+        while(true) {
+            lRound = content.indexOf('(',lRound+1);
+            rRound = content.indexOf(')',rRound+1);
+            if(lRound == -1) {
+                return frequencies;
+            }
+            let freq = content.substring(lRound+1,rRound);
+            freq = parseInt(freq);
+            frequencies.push(freq);
         }
-        comma2 = divContent.indexOf(',',comma1+1);
-        if(comma2==-1) {
-            comma2 = comma1;
-            btMaxHide = true;
-        }
-        comma3 = divContent.indexOf(',',comma2+1);
-        if(comma3==-1) {
-            comma3 = comma2;
-            btMaxHide = true;
-        }
-        comma4 = divContent.indexOf(',',comma4+1);
-        if(comma4==-1) {
-            comma4 = comma3;
-            btMaxHide = true;
-        }
-        contentThreeFirst = divContent.substring(0,comma4);
-        let contentFull = document.getElementById(dvSite).firstChild.textContent;
-        document.getElementById(dvSite).firstChild.textContent = contentThreeFirst;
-        document.getElementById(siteBtMin).style.display='none';
-        if(btMaxHide)
-            document.getElementById(siteBtMax).style.visibility='hidden';
+    }
+
+    function getMainFrequencies(site) {
+        let content = fullSiteText[site];
+        if (content == '')
+            return [];
         else
-            document.getElementById(siteBtMax).style.visibility='visible';
-        return contentFull;
-      }
+            return getFrequencies(content);
+	}
+
+    function showYandex() {
+        document.getElementById('btYandexMax').style.display='none';
+        document.getElementById('dvYandex').style.display='inline';
     }
-    
-    function showReversoFull(){
-        reversoThree = showFull('dvReverso', reversoFull, 'btReversoMin', 'btReversoMax');
-    }
-    function showGoogleFull(){
-        googleThree = showFull('dvGoogle', googleFull, 'btGoogleMin', 'btGoogleMax');
-    }
-    function showLingueeFull(){
-        lingueeThree = showFull('dvLinguee', lingueeFull, 'btLingueeMin', 'btLingueeMax');
-    }
-    
-    function showFull(site, siteFull, siteBtMin, siteBtMax) {
-        siteThree = siteFull;
-        document.getElementById(site).firstChild.textContent = siteFull;
-        document.getElementById(siteBtMin).style.display='inline';
-        document.getElementById(siteBtMax).style.visibility='hidden';
-        return siteThree;
-    }
-    
-    
-    function yandexMax () {
-        document.getElementById('dvYandex').style.display='block';
-        document.getElementById('btYandexMax').style.visibility='hidden';
-    }
-    function yandexMin () {
+    function hideYandex() {
+        document.getElementById('btYandexMax').style.display='inline';
         document.getElementById('dvYandex').style.display='none';
-        document.getElementById('btYandexMax').style.visibility='visible';
     }
-    
-    function deeplMax () {
-        document.getElementById('dvDeepl').style.display='block';
-        document.getElementById('btDeeplMax').style.visibility='hidden';
+
+    function showPhrases() {
+        document.getElementById('btPhrasesMax').style.display='none';
+        document.getElementById('btPhrasesMin').style.display='inline';
+        document.getElementById('dvPhrases').style.display='inline';
     }
-    function deeplMin () {
-        document.getElementById('dvDeepl').style.display='none';
-        document.getElementById('btDeeplMax').style.visibility='visible';
+    function hidePhrases() {
+        document.getElementById('btPhrasesMax').style.display='inline';
+        document.getElementById('btPhrasesMin').style.display='none';
+        document.getElementById('dvPhrases').style.display='none';
     }
-    
+
+    function showBtPhrase() {
+        let btPhrasesMax = document.getElementById('btPhrasesMax');
+	    let enPhrases = document.getElementById('enPhrases');
+	    let ptPhrases = document.getElementById('ptPhrases');
+		if (enPhrases.innerText == '' && ptPhrases.innerText == '') {
+			btPhrasesMax.style.display='none';
+		}
+    }
+
     function loadScripts () {
-        threeReversoFirst();
-        threeGoogleFirst();  
-        threeLingueeFirst();  
-    
-        document.getElementById('btReversoMax').addEventListener('click',showReversoFull);
-        document.getElementById('btReversoMin').addEventListener('click',threeReversoFirst);
-        document.getElementById('btGoogleMax').addEventListener('click',showGoogleFull);
-        document.getElementById('btGoogleMin').addEventListener('click',threeGoogleFirst);
-        document.getElementById('btLingueeMax').addEventListener('click',showLingueeFull);
-        document.getElementById('btLingueeMin').addEventListener('click',threeLingueeFirst);
-    
-        document.getElementById('btDeeplMin').addEventListener('click',deeplMin);
-        document.getElementById('btDeeplMax').addEventListener('click',deeplMax);
-        document.getElementById('btYandexMin').addEventListener('click',yandexMin);
-        document.getElementById('btYandexMax').addEventListener('click',yandexMax);
+        getAllFullSpanText();
+        getAllMainSpanText();
+        //threeReversoFirst();
+        setMainText('Google');
+        //threeLingueeFirst();  
+        
+        //showBtPhrase();
+
+        //document.getElementById('btReversoMax').addEventListener('click',showReversoFull);
+        //document.getElementById('btReversoMin').addEventListener('click',threeReversoFirst);
+        //document.getElementById('btGoogleMax').addEventListener('click',showGoogleFull);
+        //document.getElementById('btGoogleMin').addEventListener('click',threeGoogleFirst);
+        //document.getElementById('btLingueeMax').addEventListener('click',showLingueeFull);
+        //document.getElementById('btLingueeMin').addEventListener('click',threeLingueeFirst);
+
+        // document.getElementById('btYandexMax').addEventListener('click',showYandex);
+        // document.getElementById('btYandexMin').addEventListener('click',hideYandex);
+
+        // document.getElementById('btPhrasesMax').addEventListener('click',showPhrases);
+        // document.getElementById('btPhrasesMin').addEventListener('click',hidePhrases);
+
     }
     
     </script>
+
+    <div style="text-align:center;">
+	    <font color="#3ff"><b>slipped</b></font><br>
+    </div>
+    <hr>
     
-    <font color="#3ff"><b>slipped</b></font>
-    <br>
-    {{ipa1}} <font color="#3ff"><b>--</b></font> {{ipa2}}
-    <hr id=answer>
-    {{mp3}}
-    <br>
-    
-    <font color="#3ff"><b>Reverso:</b></font>
-    <button  id="btReversoMax">+</button>
-    <br>
-    <div  id="dvReverso">(8050)ace,(2000)free,(500)ox,(100)nothing,(5)great <button id="btReversoMin">-</button></div>
-    
-    <font color="#3ff"><b>Google:</b></font>
-    <button id="btGoogleMax">+</button>
-    <br>
-    <div id="dvGoogle">(3)no,(3)please,(2)fight,(1)yes,(1)zero <button id="btGoogleMin">-</button></div>
-    
-    
-    <font color="#3ff"><b>Linguee:</b></font><button id="btLingueeMax">+</button>
-    <div id="dvLinguee">no,please,fight,yes,zero <button id="btLingueeMin">-</button></div>
-    
-    
-    <font color="#3ff"><b>Deepl:</b></font> 
-    <button id="btDeeplMax">+</button>
-    <br>
-    <div id="dvDeepl" style="display:none">worked, problems
-        <button id="btDeeplMin">-</button>
+    <font color="#3ff"><b>reverso:</b></font>
+    <div id="dvReverso" style="display:inline">
+        <span>(8050)ace,(2000)free,(500)ox,(100)nothing,(5)great</span>
     </div>
     
-    
-    <font color="#3ff"><b>Yandex:</b></font>
-    <button id="btYandexMax">+</button>
-    <div id="dvYandex" style="display:none">haul, harbor, last 
-        <button id="btYandexMin">-</button>
+     <br>
+    <font color="#3ff"><b>google:</b></font>
+    <div id="dvGoogle" style="display:inline">
+        <span>(3)although,(3)please,(2)fight,(2)yes,(1)zero,(1)whats</span>
     </div>
     
-    <hr>
-    <font color="#3ff"><b>Phrases:</b></font>
     <br>
-    <div id="en-phrases">{{en-phrases}}</div>
-    <hr>
-    <font color="#3ff"><b>Frases:</b></font>
+    <font color="#3ff"><b>linguee:</b></font>
+    <div id="dvLinguee" style="display:inline">
+        <span>no,please,fight,yes,zero</span>
+    </div>
+
     <br>
-    <div id="en-phrases">{{pt-phrases}}</div>
+    <font color="#3ff"><b>cambridge:</b></font>
+    <div id="dvCambridge" style="display:inline">
+        <span>hi,thanks,common phase,nothing better,your choice</span>
+    </div>
+    
+    <br>
+    <font color="#3ff"><b>deepl:</b> </font>
+    <div id="dvDeepl" style="display:inline">
+        <span>worked problems</span>
+    </div>
+
+    <br>
+
+    <font color="#3ff"><b>yandex:</b> </font>
+    <div id="dvYandex" style="display:inline">
+        <span>burden,flee,nothing</span>
+    </div>
+
+    <hr>
+    <font color="#3ff"><b>uk-ipa:</b></font> [{{yandex-en-uk-ipa}}]{{howjsay-mp3}}
+	<br>
+    <font color="#3ff"><b>us-ipa:</b></font> [{{tophonetic-en-us-ipa}}]{{en-us-mp3}}
+    <hr>
+
+
+    <div style="text-align:center;">
+     	<font color="#3ff"><b>phrases:</b></font> 
+	</div>
+     <button id="btPhrasesMax">+</button>
+     <button id="btPhrasesMin" style="display:none">-</button>
+     <br>
+    <div id="dvPhrases" style="display:none">
+        <hr>
+        <font color="#3ff"><b>english:</b></font>
+        <br>
+        <span id="enPhrases">{{en-phrases}}</span>
+        <hr>
+        <font color="#3ff"><b>portuguese:</b></font>
+        <br>
+        <span id="ptPhrases">{{pt-phrases}}</span>
+    </div>
 
 <script>
     window.onload = loadScripts();

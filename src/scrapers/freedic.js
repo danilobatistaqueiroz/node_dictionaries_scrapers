@@ -4,6 +4,7 @@ var array = require('lodash/array');
 var files = require('../files');
 var util = require('../util');
 const colors = require('colors/safe');
+var dateFormat = require('dateformat');
 
 const happerCollins = {
     select(translations,content,word){
@@ -183,12 +184,24 @@ const scraperObject = {
     async scrape(browser){
         let words = files.loadInputFile();
         let page = await browser.newPage();
-        files.initializeLog();
-        files.initializeFile();
+
+        let count = 0;
+        let startLine = parseInt(json.startLine);
+        if(startLine==0){
+            if(files.exists()) {
+                files.appendLog('',fail,'arquivo existente!');
+                return;
+            }
+            files.initializeLog();
+            files.initializeFile();
+        }
+        let ini = new Date()
+        files.appendLog('','',dateFormat(ini, "h:MM:ss l"));
+
         for(let word of words) {
             console.log(word);
             if(util.isCapitalized(word)){
-                files.appendNewLineFile();
+                files.appendFile('\n');
                 continue;
             }
             let result = await this.queryDictionary(page, word);
@@ -201,8 +214,7 @@ const scraperObject = {
             let html = await page.content();
             let line = await this.queryTranslations(html, word);
             let pronunciation = rHouse.select(html,word);
-            files.appendFile(line+pronunciation+'\t');
-            files.appendNewLineFile();
+            files.appendFile(line+pronunciation+'\t\n');
         }
     },
     async queryDictionary(page, word){

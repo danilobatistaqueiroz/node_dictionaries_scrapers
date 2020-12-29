@@ -8,9 +8,14 @@ var json = require('../../config.json');
 
 const scraperObject = {
     async typeWord(page, word) {
-        await page.$eval('textarea[class="er8xn"]', el => el.value = '');
-        await page.keyboard.type(word);
-        await page.waitForSelector('span[class="VIiyi"]');
+        try{
+            await page.$eval('textarea[class="er8xn"]', el => el.value = '');
+            await page.keyboard.type(word);
+            await page.waitForSelector('span[class="VIiyi"]');
+        } catch (err) { 
+            return 'fail';
+        }
+        return 'success';
     },
     async scrape(browser) {
 
@@ -23,6 +28,10 @@ const scraperObject = {
         let count = 0;
         let startLine = parseInt(json.startLine);
         if(startLine==0){
+            if(files.exists()) {
+                files.appendLog('',fail,'arquivo existente!');
+                return;
+            }
             files.initializeLog();
             files.initializeFile();
         }
@@ -46,13 +55,25 @@ const scraperObject = {
                 continue;
             }
 
-            await this.typeWord(page, word);
-            
+            let result = await this.typeWord(page, word);
+            if (result == 'fail') {
+                console.log(colors.red('nao encontrou traducao principal'));
+                files.appendLog(word,'fail','nao encontrou traducao principal');
+                files.appendFile(word+'\t\n');
+                continue;
+            }
+
             await this.delay(1000);
 
             let value = await page.$eval('textarea[class="er8xn"]', el => el.value);
             if(value!=word){
-                this.typeWord(page, word);
+                result = await this.typeWord(page, word);
+                if (result == 'fail') {
+                    console.log(colors.red('nao encontrou traducao principal'));
+                    files.appendLog(word,'fail','nao encontrou traducao principal');
+                    files.appendFile(word+'\t\n');
+                    continue;
+                }
             } else {
                 value = await page.$eval('textarea[class="er8xn"]', el => el.value);
                 if(value!=word){
@@ -64,7 +85,6 @@ const scraperObject = {
             }
 
             const mainTranslations = await page.evaluate(() => {
-                //let main = document.querySelectorAll('span[class="J0lOec"]');
                 let main = document.querySelectorAll('.VIiyi');
                 let sexs = document.querySelectorAll('.NlvNvf');
                 list = [];

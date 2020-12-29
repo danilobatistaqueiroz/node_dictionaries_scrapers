@@ -1,0 +1,10 @@
+python script
+identify words in linguee list that don't exists in the others 4
+if don't exists, then, remove from the list
+
+yandex
+procurar por capitalizado e remover
+procurar por palavra que não existe em nenhuma outra lista e remover
+mas antes remover toda acentuação dos outros, pois yandex não tem acentuação
+adicionar um r, um s, u, no final tanto da palavra yandex como dos outros
+e comparar

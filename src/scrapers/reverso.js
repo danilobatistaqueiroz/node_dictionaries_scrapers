@@ -24,8 +24,12 @@ const scraperObject = {
         let page = await browser.newPage();
 
         let count = 0;
-        let startword = 0;
-        if(startword==0){
+        let startLine = parseInt(json.startLine);
+        if(startLine==0){
+            if(files.exists()) {
+                files.appendLog('',fail,'arquivo existente!');
+                return;
+            }
             files.initializeLog();
             files.initializeFile();
         }
@@ -33,14 +37,13 @@ const scraperObject = {
         files.appendLog('','',dateFormat(ini, "h:MM:ss l"));
 
         for(let word of words) {
+            console.log(word);
             count++;
-            if (count < startword) {
+            if (count < startLine) {
                 continue;
             }
-            console.log(word);
             if(util.isCapitalized(word)){
-                files.appendFile('\t');
-                files.appendNewLineFile();
+                files.appendFile('\t\n');
                 continue;
             }
             let url = `https://context.reverso.net/translation/english-${json.language}/${word}`;
@@ -55,8 +58,7 @@ const scraperObject = {
             let datapos = 'data-pos=';
             let datafreq = 'data-freq=';
             if (content == null) {
-                files.appendFile('\t');
-                files.appendNewLineFile();
+                files.appendFile('\t\n');
                 continue;
             }
             
@@ -73,19 +75,13 @@ const scraperObject = {
                 return parseInt(b.freq) - parseInt(a.freq);
             });
 
+            files.appendFile(`${word}\t`)
             if(translations.length > 0){
-                // let bold = reverso.getBoldTerms(translations);
-                // for(let b = 0; b < bold.length; b++){
-                //     files.appendFile(`(${bold[b].freq})${bold[b].value},`);
-                // }
-                //files.appendFile('\t');
                 for(let t = 0; t < translations.length; t++){
                     files.appendFile(`(${translations[t].freq})${translations[t].value},`);
                 }
-            } else {
-                files.appendFile('\t');
-            }
-            files.appendNewLineFile();
+            } 
+            files.appendFile('\n');
         }
         let end = new Date()
         files.appendLog('', '', dateFormat(end, "h:MM:ss l"));

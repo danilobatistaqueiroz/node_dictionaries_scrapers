@@ -1,9 +1,12 @@
 "use strict"
+var json = require('../../config.json');
 var array = require('lodash/array');
 var files = require('../files');
 var util = require('../util');
 const fs = require('fs');
 const path = require('path');
+const colors = require('colors/safe');
+var dateFormat = require('dateformat');
 
 const cambridge = {
     getFileName (str) {
@@ -14,7 +17,7 @@ const cambridge = {
         for(let a = 0; a < lists.audios.length; a++){
             let audio = path.join('https://dictionary.cambridge.org',lists.audios[a]);
             let fileName = this.getFileName(audio);
-            const file = fs.createWriteStream(`output/mp3/cambridge-${fileName}`);
+            const file = fs.createWriteStream(`mp3/cambridge-${fileName}`);
             const request = https.get(audio, function(response) {
                 response.pipe(file);
             });
@@ -33,10 +36,6 @@ const cambridge = {
         let audios = array.uniq(group.audios);
         let definitions = array.uniq(group.definitions);
         translations = this.removeDuplicatedTranslatedTerms(translations);
-        console.log(pronunciations);
-        console.log(translations);
-        console.log(audios);
-        console.log(definitions);
         return {pronunciations, translations, audios, definitions};
     },
     removeDuplicatedTranslatedTerms(translations){
@@ -53,14 +52,20 @@ const cambridge = {
             return util.result.fail;
         }
         let url = `https://dictionary.cambridge.org/dictionary/english-portuguese/${word}`;
-        const response = await page.goto(url);
+        let response;
+        try{
+            response = await page.goto(url);
+        } catch (err) {
+            console.log(colors.red(word+' : timeout'));
+            return util.result.fail;
+        }
         const chain = response.request().redirectChain();
         if(chain.length==1){
             return util.result.fail;
         }
         try{
-            await page.setDefaultTimeout(5000);
-            await page.setDefaultNavigationTimeout(5000);
+            await page.setDefaultTimeout(8000);
+            await page.setDefaultNavigationTimeout(8000);
             await page.waitForSelector(selector);
         } catch (err) {
             return util.result.fail;
@@ -70,19 +75,36 @@ const cambridge = {
 }
 
 const scraperObject = {
+    delay : async (ms) => new Promise(res => setTimeout(res, ms)),
     async scrape(browser){
         let words = files.loadInputFile();
         let page = await browser.newPage();
-        files.initializeLog();
-        files.initializeFile();
+
+        let count = 0;
+        let startLine = parseInt(json.startLine);
+        if(startLine==0){
+            if(files.exists()) {
+                files.appendLog('',fail,'arquivo existente!');
+                return;
+            }
+            files.initializeFile();
+        }
+        let ini = new Date()
+        files.appendLog('','',dateFormat(ini, "h:MM:ss l"));
+
         let mainSelector = '.entry-body.dentry-body';
         for(let word of words){
             console.log(word);
+            count++;
+            if (count < startLine) {
+                continue;
+            }
+            await this.delay(1300);
             let result = await cambridge.queryDictionary(page, word,mainSelector);
             if(result==util.result.fail){
-                console.log('fail');
+                console.log(colors.red('fail'));
                 files.appendLog(word, util.result.fail);
-                files.appendFile('\t\t\t\n');
+                files.appendFile(`${word}\t\t\t\t\n`);
                 continue;
             }
             let html = await page.content();
@@ -104,9 +126,6 @@ const scraperObject = {
                 let meanings = content.querySelectorAll('.trans.dtrans.dtrans-se');
                 console.log(meanings.length);
                 for(let m = 0; m < meanings.length; m++){
-                    console.log(m);
-                    console.log(meanings[m].innerHTML);
-                    console.log(meanings[m].textContent);
                     translations.push(meanings[m].textContent.trim());
                 }
                 let divPronUS = entryBodies[e].querySelectorAll('.pron-info.dpron-info')[1];
@@ -132,9 +151,12 @@ const scraperObject = {
             let lists = cambridge.removeDuplications(group);
             cambridge.downloadMp3(lists);
             lists = cambridge.setMp3Field(lists);
-            files.appendFile(`${lists.translations}\t${lists.pronunciations}\t${lists.audios}\t${lists.definitions}\n`);
+            files.appendFile(`${word}\t${lists.translations}\t${lists.pronunciations}\t${lists.audios}\t${lists.definitions}\n`);
         }
-    },
+        let end = new Date()
+        files.appendLog('', '', dateFormat(end, "h:MM:ss l"));
+        files.appendLog('', '', 'total de palavras:' + count);
+    }
 }
 
 module.exports = scraperObject;

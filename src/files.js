@@ -20,7 +20,7 @@ const files = {
         }
     },
     initializeLog(){
-        fs.writeFile(`output/logs/${json.fileName}-${json.site}.log`,'', 'utf8',(err) => {if (err) throw err});
+        fs.writeFile(`logs/${json.fileName}-${json.site}.log`,'', 'utf8',(err) => {if (err) throw err});
     },
     appendLog(word, result, message){
         if(result==util.result.fail)
@@ -28,7 +28,10 @@ const files = {
         else
             console.log(message);
         let data = word+'\t'+result+'\t'+message+'\n';
-        fs.appendFile(`output/logs/${json.fileName}-${json.site}.log`,data, 'utf8',(err) => {if (err) throw err});
+        fs.appendFile(`logs/${json.fileName}-${json.site}.log`,data, 'utf8',(err) => {if (err) throw err});
+    },
+    exists(){
+        return fs.existsSync(`output/${json.fileName}-${json.site}.csv`);
     },
     initializeFile(){
         fs.writeFileSync(`output/${json.fileName}-${json.site}.csv`,'', 'utf8');
