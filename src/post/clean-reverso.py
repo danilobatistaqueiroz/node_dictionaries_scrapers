@@ -1,5 +1,5 @@
 import os
-new_file = '4001-5000-reverso-new.csv'
+new_file = '4001-5000-reverso-clean.csv'
 def remove_same_word():
     fread = open ('4001-5000-reverso.csv', 'r')
     if os.path.exists(new_file):

@@ -27,7 +27,10 @@ body {
         return document.getElementById('dv'+site).querySelector('span').innerText;
     }
     function setSpanText(site, text){
-        return document.getElementById('dv'+site).querySelector('span').innerText = text;
+        document.getElementById('dv'+site).querySelector('span').innerText = text;
+    }
+    function getSpanHtml(site, html){
+        return document.getElementById('dv'+site).querySelector('span').innerHTML;
     }
     function setSpanHtml(site, html){
         document.getElementById('dv'+site).querySelector('span').innerHTML = html;

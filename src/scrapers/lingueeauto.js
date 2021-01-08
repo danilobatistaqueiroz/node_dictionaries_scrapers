@@ -113,6 +113,7 @@ const scraperObject = {
             let lemmas = content.querySelectorAll('.autocompletion_item.isForeignTerm');
             files.appendFile(word+'\t');
             console.log('lemmas:'+lemmas.length);
+            await this.delay(1000);
             for(let l = 0; l < lemmas.length; l++){
                 let rows = lemmas[l].querySelectorAll('.translation_row');
                 console.log('rows:'+rows.length);

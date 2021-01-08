@@ -8,3 +8,8 @@ procurar por palavra que não existe em nenhuma outra lista e remover
 mas antes remover toda acentuação dos outros, pois yandex não tem acentuação
 adicionar um r, um s, u, no final tanto da palavra yandex como dos outros
 e comparar
+
+pesquisar no Linguee um campo que todas as palavras não conferem com dos outros dicionários
+
+no yandex mudar tudo para lowcase
+

@@ -63,7 +63,7 @@ const scraperObject = {
                 continue;
             }
 
-            await this.delay(1000);
+            await this.delay(2000);
 
             let value = await page.$eval('textarea[class="er8xn"]', el => el.value);
             if(value!=word){

@@ -17,7 +17,7 @@ const cambridge = {
         for(let a = 0; a < lists.audios.length; a++){
             let audio = path.join('https://dictionary.cambridge.org',lists.audios[a]);
             let fileName = this.getFileName(audio);
-            const file = fs.createWriteStream(`mp3/cambridge-${fileName}`);
+            const file = fs.createWriteStream(`mp3/${json.fileName}/cambridge/${json.fileName}-cambridge-${fileName}`);
             const request = https.get(audio, function(response) {
                 response.pipe(file);
             });
@@ -26,7 +26,7 @@ const cambridge = {
     setMp3Field(lists){
         for(let i = 0; i < lists.audios.length; i++){
             let mp3 = this.getFileName(lists.audios[i]);
-            lists.audios[i] = `[sound:cambridge-${mp3}]`;
+            lists.audios[i] = `[sound:${json.fileName}-cambridge-${mp3}]`;
         }
         return lists;
     },
@@ -75,6 +75,16 @@ const cambridge = {
 }
 
 const scraperObject = {
+    removeLastCharIfCondition(text, charCondition){
+        if(text!=undefined && text!=null && text!=''){
+            text = text.trim();
+            let lastChar = text.charAt(text.length-1);
+            if(lastChar==charCondition){
+                return text.slice(0,-1);
+            }
+        }
+        return text;
+    },
     delay : async (ms) => new Promise(res => setTimeout(res, ms)),
     async scrape(browser){
         let words = files.loadInputFile();
@@ -84,7 +94,7 @@ const scraperObject = {
         let startLine = parseInt(json.startLine);
         if(startLine==0){
             if(files.exists()) {
-                files.appendLog('',fail,'arquivo existente!');
+                files.appendLog('',util.result.fail,'arquivo existente!');
                 return;
             }
             files.initializeFile();
@@ -99,7 +109,7 @@ const scraperObject = {
             if (count < startLine) {
                 continue;
             }
-            await this.delay(1300);
+            await this.delay(2000);
             let result = await cambridge.queryDictionary(page, word,mainSelector);
             if(result==util.result.fail){
                 console.log(colors.red('fail'));
@@ -115,9 +125,13 @@ const scraperObject = {
             let audios = [];
             let definitions = [];
             let divDefinitions = content.querySelectorAll('.def.ddef_d.db');
+            let definitionsCnt = 0;
             for(let d = 0; d < divDefinitions.length; d++){
-                definitions.push(divDefinitions[d].textContent+'. ');
+                definitionsCnt++;
+                let definition = this.removeLastCharIfCondition(divDefinitions[d].textContent,',');
+                definitions.push(definitionsCnt+'. '+definition+'. ');
             }
+            await this.delay(1500);
             for(let e = 0; e < entryBodies.length; e++){
                 let blocks = entryBodies[e].querySelectorAll('.sense-block.pr.dsense.dsense-noh');
                 if(blocks==null || blocks.length==0){
@@ -147,9 +161,11 @@ const scraperObject = {
                     pronunciations.push(divsIPA[p].innerHTML.trim());
                 }
             }
+            await this.delay(1500);
             let group = {translations,pronunciations,audios,definitions};
             let lists = cambridge.removeDuplications(group);
             cambridge.downloadMp3(lists);
+            await this.delay(1500);
             lists = cambridge.setMp3Field(lists);
             files.appendFile(`${word}\t${lists.translations}\t${lists.pronunciations}\t${lists.audios}\t${lists.definitions}\n`);
         }

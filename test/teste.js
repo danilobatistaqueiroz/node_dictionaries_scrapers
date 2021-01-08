@@ -1,12 +1,14 @@
-var dict = {};
-
-dict['key'] = "testing";
-dict['chave'] = "aqui";
-
-for( item in dict){
-    console.log(dict[item]);
+function removeLastCharIfCondition(text, charCondition){
+    if(text!=undefined && text!=null && text!=''){
+        text = text.trim();
+        let lastChar = text.charAt(text.length-1);
+        if(lastChar==charCondition){
+            return text.slice(0,-1);
+        }
+    }
+    return text;
 }
 
-dict.botao = "ok";
+let x = 'abcdedifialsdkfsdfslk,';
 
-console.log(dict);
+console.log(removeLastCharIfCondition(x,','));

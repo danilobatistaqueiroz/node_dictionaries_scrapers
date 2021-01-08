@@ -1,4 +1,4 @@
-def validaQtdadeTabs():
+def valida_qtd_tabs():
     rd = open ('6001-7000-freedic.csv', 'r')
     counter = 0
     while True:
@@ -10,4 +10,5 @@ def validaQtdadeTabs():
             print('tabulacao diferente:'+str(line.count('\t'))+'-'+str(counter))
     rd.close()
 
-validaQtdadeTabs()
+
+valida_qtd_tabs()

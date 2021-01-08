@@ -21,4 +21,16 @@ def clean():
     file = open('../../output/clean/3001-4000-cambridge-clean.csv','w')
     file.write('\n'.join(output))
 
+def validate_cambridge_file():
+    rd = open ('../../output/clean/3001-4000-cambridge-clean.csv', 'r')
+    while True:
+        line = rd.readline()
+        if not line :
+            break
+        if line.count('\t') != 3 :
+            word = line[:line.find('\t')]
+            print('tabulacao diferente:'+str(line.count('\t'))+'-'+word)
+    rd.close()
+
 clean()
+validate_cambridge_file()

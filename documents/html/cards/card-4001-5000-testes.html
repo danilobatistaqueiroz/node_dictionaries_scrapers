@@ -1,0 +1,595 @@
+<html>
+    
+<meta charset="UTF-8">
+
+<script>
+
+class SetTexts {
+    initialize(){
+        this.sites = ['Reverso','Google','Linguee','Cambridge','Deepl','Yandex'];
+        this.fullHtmls = {};
+        this.minHtmls = {};
+        this.minTexts = {};
+        this.configAllFullSpanHtml();
+        this.configAllMinTexts(this.fullHtmls);
+        this.configAllMinSpanHtml(this.fullHtmls, this.minTexts);
+        this.setAllSpanHtmls();
+        return {"fullHtmls":this.fullHtmls, "minHtmls":this.minHtmls};
+    }
+    configAllFullSpanHtml(){
+        for(let site of this.sites) {
+            this.fullHtmls[site] = this.getSpanHtml(site);
+        }
+    }
+    configAllMinTexts(fullHtmls){
+        for(let site of this.sites) {
+            let oSite = eval(`( new ${site}() )`);
+            let fullHtml = fullHtmls[site];
+            this.minTexts[site] = this.getMinText(oSite, fullHtml);
+        }
+    }
+    configAllMinSpanHtml(fullTexts, minTexts){
+        let wordsInManyDic = this._findInManyDic(minTexts);
+        for(let site of this.sites) {
+            let fullText = fullTexts[site];
+            const oSite = eval(`new ${site}()`);
+            let minTextBold = oSite.bolders(this.getMinText(oSite, fullText));
+            let minTextBoldReds = this.colorWordsInRed(oSite,wordsInManyDic,minTextBold)
+            this.minHtmls[site] = minTextBoldReds;
+        }
+    }
+    _findInManyDic(minTexts){
+        let inManyDic = new WordsInManyDic(minTexts);
+        return inManyDic.getRedWords();
+    }
+    colorWordsInRed(oSite,wordsInManyDic,minTextBold){
+        if(oSite.hasFrequency())
+            return this.colorWordsInRedFrequency(wordsInManyDic,minTextBold);
+        else
+            return this.colorWordsInRedSimple(wordsInManyDic,minTextBold);
+    }
+    colorWordsInRedFrequency(wordsInManyDic,minTextBold){
+        for(let word of wordsInManyDic){
+            let wordRed = `<font color="#8af">${word}</font>`;
+            if(this.wordIsBold(minTextBold,word))
+                continue;
+            minTextBold = minTextBold.replace(`)${word},` , `)${wordRed},`);
+            if(this.wordIsLast(minTextBold, word)){
+                minTextBold = minTextBold.replace(`)${word}` , `)${wordRed}`);
+            }
+        }
+        return minTextBold;
+    }
+    wordIsBold(minTextBold,word){
+        let w = minTextBold.indexOf(word);
+        let lB = minTextBold.indexOf('<b>');
+        let rB = minTextBold.indexOf('</b>');
+        return (lB < w && rB > w);
+    }
+    colorWordsInRedSimple(wordsInManyDic,minTextBold){
+        for(let word of wordsInManyDic){
+            let wordRed = `<font color="#8af">${word}</font>`;
+            minTextBold = minTextBold.replace(`,${word},` , `,${wordRed},`);
+            if(this.wordIsLast(minTextBold, word)){
+                minTextBold = minTextBold.replace(`,${word}` , `,${wordRed}`);
+            } else if(this.wordIsFirst(minTextBold, word)){
+                minTextBold = minTextBold.replace(`${word},` , `${wordRed},`);
+            }
+        }
+        return minTextBold;
+    }
+
+    wordIsLast(text,word){
+        return (text.substring(text.length-word.length,text.length)==word);
+    }
+    wordIsFirst(text,word){
+        return (text.substring(0,word.length)==word);
+    }
+
+    getSpanHtml(site, html){
+        return document.getElementById('dv'+site).querySelector('span').innerHTML;
+    }
+    setSpanHtml(html){
+        let site = this.constructor.name;
+        document.getElementById('dv'+site).querySelector('span').innerHTML = html;
+    }
+
+    setAllSpanHtmls(){
+        for(let site of this.sites) {
+            let html = this.minHtmls[site];
+            document.getElementById('dv'+site).querySelector('span').innerHTML = html;
+        }
+    }
+
+    getMinText(oSite, fullText) {
+        if(oSite.hasMin()==false){
+            return fullText;
+        }
+        let content = fullText;
+        let comma1, comma2, comma3, comma4 = '';
+        if (content != '') {
+            comma1 = content.indexOf(',');
+            if(comma1==-1) {
+                comma1 = content.length;
+            }
+            comma2 = content.indexOf(',',comma1+1);
+            if(comma2==-1) {
+                comma2 = content.length;
+            }
+            comma3 = content.indexOf(',',comma2+1);
+            if(comma3==-1) {
+                comma3 = content.length;
+            }
+            comma4 = content.indexOf(',',comma3+1);
+            if(comma4==-1) {
+                comma4 = content.length;
+            }
+            content =  content.substring(0,comma4);
+        }
+        return content;
+    }
+
+    createMinButton(oSite,minHtmls){
+        let site = oSite.constructor.name;
+        let bt = document.createElement('BUTTON');
+        let id = 'bt'+site+'Min';
+        bt.setAttribute('id',id);
+        bt.innerText = '-';
+        document.getElementById('dv'+site).prepend(bt);
+        document.getElementById(id).style.display='none';
+        document.getElementById(id).addEventListener('click', (evt) => this.minimize(oSite,minHtmls[site]) );
+    }
+    createMaxButton(oSite,fullHtmls){
+        let site = oSite.constructor.name;
+        let bt = document.createElement('BUTTON');
+        let id = 'bt'+site+'Max';
+        bt.setAttribute('id',id);
+        bt.innerText = '+';
+        document.getElementById('dv'+site).prepend(bt);
+        if(fullHtmls[site].split(',').length<=4)
+            document.getElementById(id).style.display='none';
+        else
+            document.getElementById(id).style.display='inline';
+        document.getElementById(id).addEventListener('click', (evt) => this.maximize(oSite,fullHtmls[site]) );
+    }
+    minimize(oSite,html){
+        document.getElementById('bt'+oSite.constructor.name+'Max').style.display='inline';
+        document.getElementById('bt'+oSite.constructor.name+'Min').style.display='none';
+        oSite.setSpanHtml(html);
+    }
+    maximize(oSite,html){
+        document.getElementById('bt'+oSite.constructor.name+'Min').style.display='inline';
+        document.getElementById('bt'+oSite.constructor.name+'Max').style.display='none';
+        oSite.setSpanHtml(html);
+    }
+}
+
+class HighFrequency {
+    constructor(site, minText) {
+        this.minText = minText;
+        this.site = site;
+    }
+    _getFrequencies(content) {
+        let lRound=-1;
+        let rRound=-1;
+        let frequencies = [];
+        while(true) {
+            lRound = content.indexOf('(',lRound+1);
+            rRound = content.indexOf(')',rRound+1);
+            if(lRound == -1) {
+                return frequencies;
+            }
+            let freq = content.substring(lRound+1,rRound);
+            freq = parseInt(freq);
+            frequencies.push(freq);
+        }
+    }
+    _getMainFrequencies() {
+        if (this.minText == '')
+            return [];
+        else
+            return this._getFrequencies(this.minText);
+    }
+    higherFrequencies() {
+        let frequencies = this._getMainFrequencies();
+        return this.site._higherFrequencies(frequencies);
+    }
+}
+
+class Reverso extends SetTexts {
+    configure(fullHtmls, minHtmls){
+        super.createMinButton(this,minHtmls);
+        super.createMaxButton(this,fullHtmls);
+    }
+    higherFrequencies(){
+        let high = new HighFrequency(this);
+        return high.higherFrequencies();
+    }
+    _higherFrequencies(frequencies) {
+        let anterior = 0;
+        let highers = [];
+        for(let freq of frequencies){
+            if( (anterior/3) > freq){
+                return highers;
+            }
+            highers.push(freq);
+            anterior = freq;
+        }
+        return highers;
+    }
+    bolders(rMinText){
+        let high = new HighFrequency(this,rMinText);
+        let freq = high.higherFrequencies();
+        let i = -1;
+        freq.forEach((f) => {
+            i = rMinText.indexOf('('+f+')',i+1);
+        });
+        i = rMinText.indexOf(',',i);
+        if(i==-1)
+            i = rMinText.length;
+        let bolds = rMinText.substring(0,i+1);
+        let others = rMinText.substring(i+1,rMinText.length);
+        return `<b>${bolds}</b>${others}`;
+    }
+    hasFrequency(){return true;}
+    hasMin(){return true;}
+}
+
+class Google extends SetTexts {
+    configure(fullHtmls, minHtmls){
+        super.createMinButton(this,minHtmls);
+        super.createMaxButton(this,fullHtmls);
+    }
+    higherFrequencies(gMinText){
+        let high = new HighFrequency(this,gMinText);
+        return high.higherFrequencies();
+    }
+    _higherFrequencies(frequencies) {
+        let highers = [];
+        for(let freq of frequencies){
+            if(freq==3)
+                highers.push(freq);
+        }
+        return highers;
+    }
+    bolders(gMinText){
+        let high = new HighFrequency(this,gMinText);
+        let freq = high.higherFrequencies();
+        let i = -1;
+        freq.forEach(() => {
+            i = gMinText.indexOf('(3)',i+1);
+        });
+        i = gMinText.indexOf(',',i);
+        let bolds = gMinText.substring(0,i+1);
+        let others = gMinText.substring(i+1,gMinText.length);
+        return `<b>${bolds}</b>${others}`;
+    }
+    hasFrequency(){return true;}
+    hasMin(){return true;}
+}
+
+class Linguee extends SetTexts {
+    configure(fullHtmls, minHtmls){
+        super.createMinButton(this,minHtmls);
+        super.createMaxButton(this,fullHtmls);
+    }
+    bolders(linMinText){return linMinText;}
+    hasMin(){return true;}
+    hasFrequency(){return false;}
+}
+
+class Cambridge { 
+    bolders(cMinText){ return cMinText; }
+    hasMin() { return false; }
+    hasFrequency() { return false; }
+}
+class Deepl { 
+    bolders (dMinText) { return dMinText; }
+    hasMin() { return false; }
+    hasFrequency() { return false; }
+}
+class Yandex { 
+    bolders (yMinText) { return yMinText; }
+    hasMin() { return false; }
+    hasFrequency() { return false; }
+}
+
+class WordsInManyDic {
+    constructor(minTexts){
+        this.minTexts = minTexts;
+        this.sitesForSearch = ['Reverso', 'Google', 'Linguee', 'Cambridge'];
+    }
+    _convertStringToArray() {
+        let wordsSites = {};
+        for(let site in this.minTexts) {
+            wordsSites[site] = this.minTexts[site].split(',');
+        }
+        return wordsSites;
+    }
+    getRedWords() {
+        let wordsSites = this._convertStringToArray();
+        let reds = [];
+        for(let site of this.sitesForSearch){
+            for(let wordFreq of wordsSites[site]){
+                let word = wordFreq.replace(/\(\d*\)/,'');
+                reds.push(this._compareWithOthers(wordsSites, site, word));
+            }
+        }
+        reds = reds.filter(this.unique);
+        reds = this.removeNulls(reds);
+        return reds;
+    }
+
+    removeNulls(array){
+        return array.filter(function(e){return e});
+    }
+    unique(value, index, self) {
+        return self.indexOf(value) === index;
+    }
+
+    _compareWithOthers(wordsSites, site, word) {
+        let counter = 0;
+        for(let otherSite in wordsSites){
+            if(otherSite != site) {
+                for(let w of wordsSites[otherSite]){
+                    w = w.replace(/\(\d*\)/,'');
+                    if(w == word){
+                        counter++;
+                    }
+                }
+            }
+        }
+        if (counter >= 2)
+            return word;
+        else 
+            return null;
+    }
+}
+    
+class Phrases {
+    initialize(){
+        let showBtMax = this.configureBtPhraseMax();
+        let btMax = document.getElementById('btPhrasesMax');
+        btMax.addEventListener('click', (evt) => Phrases.showPhrases() );
+        let btMin = document.getElementById('btPhrasesMin');
+        btMin.addEventListener('click', (evt) => Phrases.hidePhrases() );
+        document.getElementById('dvPhrases').style.display='none';
+        document.getElementById('btPhrasesMin').style.display='none';
+        if(window.phrases == 'show' && showBtMax == 'max')
+			Phrases.showPhrases();
+    }
+    static showPhrases() {
+        document.getElementById('btPhrasesMax').style.display='none';
+        document.getElementById('btPhrasesMin').style.display='inline';
+        document.getElementById('dvPhrases').style.display='inline';
+		window.phrases = 'show';
+    }
+    static hidePhrases() {
+        document.getElementById('btPhrasesMax').style.display='inline';
+        document.getElementById('btPhrasesMin').style.display='none';
+        document.getElementById('dvPhrases').style.display='none';
+		window.phrases = 'hide';
+    }
+    configureBtPhraseMax() {
+        let btPhrasesMax = document.getElementById('btPhrasesMax');
+        let enPhrases = document.getElementById('enPhrases');
+        let ptPhrases = document.getElementById('ptPhrases');
+        if (enPhrases.innerHTML == '' && ptPhrases.innerHTML == '') {
+            btPhrasesMax.style.display='none';
+            return 'none';
+        } else {
+	        btPhrasesMax.style.display='inline';
+			return 'max';
+		}
+    }
+}
+
+
+class MacmillanPhrases {
+    initialize(){
+        let showBtMax = this.configureBtMacPhraseMax();
+        let btMax = document.getElementById('btMacmillanPhrasesMax');
+        btMax.addEventListener('click', (evt) => Phrases.showMacPhrases() );
+        let btMin = document.getElementById('btMacmillanPhrasesMin');
+        btMin.addEventListener('click', (evt) => Phrases.hideMacPhrases() );
+        document.getElementById('dvMacmillanPhrases').style.display='none';
+        document.getElementById('btMacmillanPhrasesMin').style.display='none';
+        //if(window.macphrases == 'show' && showBtMax == 'max')
+			//MacmillanPhrases.showMacPhrases();
+    }
+    static showMacPhrases() {
+        document.getElementById('btMacmillanPhrasesMax').style.display='none';
+        document.getElementById('btMacmillanPhrasesMin').style.display='inline';
+        document.getElementById('dvMacmillanPhrases').style.display='inline';
+		window.macphrases = 'show';
+    }
+    static hideMacPhrases() {
+        document.getElementById('btMacmillanPhrasesMax').style.display='inline';
+        document.getElementById('btMacmillanPhrasesMin').style.display='none';
+        document.getElementById('dvMacmillanPhrases').style.display='none';
+		window.macphrases = 'hide';
+    }
+    configureBtMacPhraseMax() {
+        let btPhrasesMax = document.getElementById('btMacmillanPhrasesMax');
+        let enPhrases = document.getElementById('enMacPhrases');
+        let ptPhrases = document.getElementById('ptMacPhrases');
+        if (enMacPhrases.innerHTML == '' && ptMacPhrases.innerHTML == '') {
+            btPhrasesMax.style.display='none';
+            return 'none';
+        } else {
+	        btPhrasesMax.style.display='inline';
+			return 'max';
+		}
+    }
+}
+
+
+
+class Definitions {
+    initialize(){
+        let btShowDefinitions = document.getElementById('btShowDefinitions');
+        btShowDefinitions.addEventListener('click', (evt) => this.showDefinitions() );
+        let btHideDefinitions = document.getElementById('btHideDefinitions');
+        btHideDefinitions.addEventListener('click', (evt) => this.hideDefinitions() );
+        btHideDefinitions.style.display='none';
+        document.getElementById('dvDefinitions').style.display='none';
+        this.configureBtShowDefinitions();
+        if(document.definitions == 'show')
+			this.showDefinitions();
+    }
+    configureBtShowDefinitions() {
+        let btShowDefinitions = document.getElementById('btShowDefinitions');
+        let dvDefinitions = document.getElementById('dvDefinitions');
+        let definitions = dvDefinitions.querySelectorAll('span');
+        if (definitions[0].innerText == '' && definitions[1].innerText == '' && definitions[2].innerText == '') {
+            btShowDefinitions.style.display='none';
+        }
+    }
+    showDefinitions(){
+        document.getElementById('dvDefinitions').style.display='block';
+        document.getElementById('btHideDefinitions').style.display='inline';
+        document.getElementById('btShowDefinitions').style.display='none';
+		document.definitions = 'show';
+    }
+    hideDefinitions(){
+        document.getElementById('dvDefinitions').style.display='none';
+        document.getElementById('btHideDefinitions').style.display='none';
+        document.getElementById('btShowDefinitions').style.display='inline';
+		document.definitions = 'hide';
+    }
+}
+
+function loadScripts () {
+    new Definitions().initialize();
+    new Phrases().initialize();
+    new MacmillanPhrases().initialize();
+    let texts = new SetTexts().initialize();
+    new Google().configure(texts.fullHtmls, texts.minHtmls);
+    new Reverso().configure(texts.fullHtmls, texts.minHtmls);
+    new Linguee().configure(texts.fullHtmls, texts.minHtmls);
+}
+
+
+</script>
+
+<style>
+    .blue-title {
+        color: #3ff;
+        font-weight: bold;
+    }
+</style>
+        
+        <div style="text-align:center;">
+            <span class="blue-title">{{word}}</span><br>
+        </div>
+        <hr>
+        
+        <span class="blue-title">reverso:</span>
+        <div id="dvReverso" style="display:inline">
+            <span>{{reverso}}</span>
+        </div>
+        
+         <br>
+        <span class="blue-title">google:</span>
+        <div id="dvGoogle" style="display:inline">
+            <span>{{google}}</span>
+        </div>
+        
+        <br>
+        <span class="blue-title">linguee:</span>
+        <div id="dvLinguee" style="display:inline">
+            <span>{{linguee}}</span>
+        </div>
+    
+        <br>
+        <span class="blue-title">cambridge:</span>
+        <div id="dvCambridge" style="display:inline">
+            <span>{{cambridge-pt}}</span>
+        </div>
+        
+        <br>
+        <span class="blue-title">deepl:</span>
+        <div id="dvDeepl" style="display:inline">
+            <span>{{deepl}}</span>
+        </div>
+    
+        <br>
+        <span class="blue-title">yandex:</span>
+        <div id="dvYandex" style="display:inline">
+            <span>{{yandex-pt}}</span>
+        </div>
+
+        <hr>
+        <span class="blue-title">uk-ipa:</span> [{{yandex-en-uk-ipa}}]{{howjsay-mp3}}
+        <br>
+        <span class="blue-title">us-ipa:</span> [ {{tophonetic-en-us-ipa}} ] [ {{cambridge-en-us-ipa}} ] [ {{thesaurus-en-us-ipa}} ] [ {{upondn-ipa}} ] [ {{freedict-en-us-ipa}} ] [ {{collins-ipa}} ]
+{{en-us-mp3}}{{cambridge-en-us-mp3}}{{thesaurus-en-us-mp3}} 
+        <hr>
+
+        <div style="text-align:center;">
+            <span class="blue-title">definitions: </span>
+            <button id="btShowDefinitions">+</button><button id="btHideDefinitions">-</button>
+        </div>
+        <div id="dvDefinitions">
+            <span class="blue-title">cambridge: </span>
+            <span>{{cambridge-definition}}</span>
+            <br>
+            <span class="blue-title">thesaurus: </span>
+            <span>{{thesaurus-definition}}</span>
+			<br>
+			<span class="blue-title">freedic: </span>
+			<span>{{freedict-definition}}</span>
+			<br>
+			<span class="blue-title">collins: </span>
+			<span>{{collins-definition}}</span>
+           <br>
+           <span class="blue-title">macmillan:</span>
+           <span>{{macmillan-definition}}</span>
+           <br>
+           <span class="blue-title">babla:</span>
+           <span>{{babla-definition}}</span>
+        </div>
+        <hr>
+    
+        <div style="text-align:center;">
+            <span class="blue-title">phrases: </span>
+            <button id="btPhrasesMax" style="display:inline">+</button><button id="btPhrasesMin">-</button>
+        </div>
+        <br>
+        <div id="dvPhrases">
+            <hr>
+            <span class="blue-title">english:</span>
+            <br>
+            <span id="enPhrases">{{en-phrases}}</span>
+            <hr>
+            <span class="blue-title">portuguese:</span>
+            <br>
+            <span id="ptPhrases">{{pt-phrases}}</span>
+			<hr>
+            <span class="blue-title">meanings:</span>
+            <br>
+			<span id="phrases-meanings">{{meanings-in-phrases}}</span>
+        </div>
+
+
+        <div style="text-align:center;">
+            <span class="blue-title">macmillan phrases: </span>
+            <button id="btMacmillanPhrasesMax" style="display:inline">+</button><button id="btMacmillanPhrasesMin">-</button>
+        </div>
+        <br>
+        <div id="dvMacmillanPhrases">
+            <hr>
+            <span class="blue-title">english:</span>
+            <br>
+            <span id="enMacPhrases">{{macmillan-phrases}}</span>
+            <hr>
+            <span class="blue-title">portuguese:</span>
+            <br>
+            <span id="ptMacPhrases">{{pt-phrases}}</span>
+        </div>
+    
+    <script>
+        window.onload = loadScripts();
+    </script>
+
+</html>
