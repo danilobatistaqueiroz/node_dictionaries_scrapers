@@ -85,7 +85,6 @@ const scraperObject = {
         }
         return text;
     },
-    delay : async (ms) => new Promise(res => setTimeout(res, ms)),
     async scrape(browser){
         let words = files.loadInputFile();
         let page = await browser.newPage();
@@ -109,7 +108,7 @@ const scraperObject = {
             if (count < startLine) {
                 continue;
             }
-            await this.delay(2000);
+            await util.delay(2000);
             let result = await cambridge.queryDictionary(page, word,mainSelector);
             if(result==util.result.fail){
                 console.log(colors.red('fail'));
@@ -131,7 +130,7 @@ const scraperObject = {
                 let definition = this.removeLastCharIfCondition(divDefinitions[d].textContent,',');
                 definitions.push(definitionsCnt+'. '+definition+'. ');
             }
-            await this.delay(1500);
+            await util.delay(1500);
             for(let e = 0; e < entryBodies.length; e++){
                 let blocks = entryBodies[e].querySelectorAll('.sense-block.pr.dsense.dsense-noh');
                 if(blocks==null || blocks.length==0){
@@ -161,11 +160,11 @@ const scraperObject = {
                     pronunciations.push(divsIPA[p].innerHTML.trim());
                 }
             }
-            await this.delay(1500);
+            await util.delay(1500);
             let group = {translations,pronunciations,audios,definitions};
             let lists = cambridge.removeDuplications(group);
             cambridge.downloadMp3(lists);
-            await this.delay(1500);
+            await util.delay(1500);
             lists = cambridge.setMp3Field(lists);
             files.appendFile(`${word}\t${lists.translations}\t${lists.pronunciations}\t${lists.audios}\t${lists.definitions}\n`);
         }

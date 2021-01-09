@@ -2,10 +2,8 @@ const reverso = require('./scrapers/reverso');
 const cambridge = require('./scrapers/cambridge');
 const freedic = require('./scrapers/freedic');
 const linguee = require('./scrapers/linguee');
-const lingueeauto = require('./scrapers/lingueeauto');
 const howjsay = require('./scrapers/howjsay');
 const google = require('./scrapers/google');
-const googletranslator = require('./scrapers/googletranslator');
 const json = require('../config.json');
 
 const scraperObject = {
@@ -14,12 +12,12 @@ const scraperObject = {
             console.log('iniciando reverso ' + json.fileName);
             json.site = 'reverso';
             await reverso.scrape(browser);
-            //console.log('iniciando googletranslator ' + json.fileName);
-            //json.site = 'googletranslator';
-            //await googletranslator.scrape(browser);
-            //console.log('iniciando lingueeauto ' + json.fileName);
-            //json.site = 'lingueeauto';
-            //await lingueeauto.scrape(browser);
+            //console.log('iniciando google ' + json.fileName);
+            //json.site = 'google';
+            //await google.scrape(browser);
+            //console.log('iniciando linguee ' + json.fileName);
+            //json.site = 'linguee';
+            //await linguee.scrape(browser);
             console.log('iniciando howjsay ' + json.fileName);
             json.site = 'howjsay';
             await howjsay.scrape(browser);

@@ -47,7 +47,7 @@ const scraperObject = {
                 continue;
             }
             
-            await this.delay(500);
+            await util.delay(500);
 
             let url = `https://context.reverso.net/translation/english-${json.language}/${word}`;
             try{
@@ -62,12 +62,12 @@ const scraperObject = {
 
             let translations = [];
 
-            await this.delay(500);
+            await util.delay(500);
 
             let html = await page.content();
             let content = util.getDom(html,'.left-content #top-results #translations-content');
 
-            await this.delay(500);
+            await util.delay(500);
             
             let datapos = 'data-pos=';
             let datafreq = 'data-freq=';
@@ -76,7 +76,7 @@ const scraperObject = {
                 continue;
             }
             
-            await this.delay(1500);
+            await util.delay(1500);
 
             let links = content.querySelectorAll('.translation');
             for (let i = 0; i < links.length; i++) {
@@ -87,13 +87,13 @@ const scraperObject = {
                 translations.push({"type":type,"freq":parseInt(freq),"value":links[i].textContent.trim()})
             }
 
-            await this.delay(500);
+            await util.delay(500);
             
             translations.sort(function (a, b) {
                 return parseInt(b.freq) - parseInt(a.freq);
             });
 
-            await this.delay(500);
+            await util.delay(500);
 
             files.appendFile(`${word}\t`)
             if(translations.length > 0){
@@ -101,14 +101,13 @@ const scraperObject = {
                     files.appendFile(`(${translations[t].freq})${translations[t].value},`);
                 }
             } 
-            await this.delay(1500);
+            await util.delay(1500);
             files.appendFile('\n');
         }
         let end = new Date()
         files.appendLog('', '', dateFormat(end, "h:MM:ss l"));
         files.appendLog('', '', 'total de palavras:' + count);
-    },
-    delay : async (ms) => new Promise(res => setTimeout(res, ms)),
+    }
 }
 
 module.exports = scraperObject;

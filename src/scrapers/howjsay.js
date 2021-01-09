@@ -95,7 +95,7 @@ const scraperObject = {
             }
             console.log(word);
             let content = await this.getContent(page,word,selector);
-            util.delay(1500);
+            await util.delay(1500);
             if(content == null || content==''){
                 console.log(colors.red('nao encontrou'));
                 files.appendLog(word,fail,'nao encontrou');
@@ -103,7 +103,7 @@ const scraperObject = {
                 files.appendNewLineFile();
                 continue;
             }
-            util.delay(1500);
+            await util.delay(1500);
             let zero = content.querySelector('.zeroResult');
             if(zero!=null){
                 console.log(colors.red('zero resultados'));
@@ -121,14 +121,14 @@ const scraperObject = {
                 files.appendNewLineFile();
                 continue;
             }
-            util.delay(1500);
+            await util.delay(1500);
             let filemp3 = content.querySelector('source').src
             howjsay.downloadMp3(filemp3);
-            util.delay(1500);
+            await util.delay(1500);
             let fieldsound = howjsay.setMp3Field(filemp3);
             files.appendFile(word+'\t'+fieldsound);
             files.appendNewLineFile();
-            util.delay(1500);
+            await util.delay(1500);
         }
         let end = new Date()
         files.appendLog('','',dateFormat(end, "h:MM:ss l"));

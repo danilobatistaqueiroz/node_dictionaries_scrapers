@@ -223,8 +223,8 @@ const scraperObject = {
             url = `file:///home/element/tutorials/puppeteer/html/freedic/${word}.html`;
         else
             url = `https://www.thefreedictionary.com/${word}`;
-        const response = await page.goto(url);
         try{
+            const response = await page.goto(url);
             await page.setDefaultTimeout(this.getTimeout());
             await page.setDefaultNavigationTimeout(this.getTimeout());
             await page.waitForSelector('#Translations');

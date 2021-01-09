@@ -1,15 +1,94 @@
+import os
 import workfiles
 
-workfiles.dictionary = 'lingueeauto'
+workfiles.dictionary = 'linguee'
 workfiles.word_list = '1001-2000'
+
+def remove_field_doesnt_match(word):
+    print("""remove row where a field doesn't have any word matching in others dictionaries""")
+
+def translations_match_other_dictionaries(word):
+    word = word.lower()
+    word_list = workfiles.word_list
+    path1 = '/home/element/Documents/english/anki-files/mostcommon-40000/output'
+    thesaurus_path = f'{path1}/{word_list}-thesaurus.csv'
+    if os.path.exists(thesaurus_path):
+        thesaurus = open(thesaurus_path, 'r')
+        while True:
+            line = thesaurus.readline()
+            if not line:
+                thesaurus.close()
+                break
+            fields = line.split('\t')
+            if len(fields) > 4:
+                terms = fields[4].lower().split(',')
+                if word in terms:
+                    thesaurus.close()
+                    return True
+    yandex_path = f'{path1}/{word_list}-yandex.csv'
+    if os.path.exists(yandex_path):
+        yandex = open(yandex_path, 'r')
+        while True:
+            line = yandex.readline()
+            if not line:
+                yandex.close()
+                break
+            fields = line.split('\t')
+            if len(fields) > 2:
+                terms = fields[2].lower().split(',')
+                if word in terms:
+                    yandex.close()
+                    return True
+    path2 = '/home/element/tutorials/puppeteer/output'
+    cambridge_path = f'{path2}/{word_list}-cambridge.csv'
+    if os.path.exists(cambridge_path):
+        cambridge = open(cambridge_path, 'r')
+        while True:
+            line = cambridge.readline()
+            if not line:
+                cambridge.close()
+                break
+            fields = line.split('\t')
+            if len(fields) > 1:
+                terms = fields[1].lower().split(',')
+                if word in terms:
+                    cambridge.close()
+                    return True
+    google_path = f'{path2}/{word_list}-google.csv'
+    if os.path.exists(google_path):
+        google = open(google_path, 'r')
+        while True:
+            line = google.readline()
+            if not line:
+                google.close()
+                break
+            fields = line.split('\t')
+            if len(fields) > 1:
+                terms = fields[1].lower().split(',')
+                if word in terms:
+                    google.close()
+                    return True
+    reverso_path = f'{path2}/{word_list}-reverso.csv'
+    if os.path.exists(reverso_path):
+        reverso = open(reverso_path, 'r')
+        while True:
+            line = reverso.readline()
+            if not line:
+                reverso.close()
+                break
+            fields = line.split('\t')
+            if len(fields) > 1:
+                terms = fields[1].lower().split(',')
+                if word in terms:
+                    reverso.close()
+                    return True
+
 
 def insert_comma():
     print('inserting commas')
     rd = workfiles.read_lasttmp_or_output()
     cnt = workfiles.new_tmpfile()
-    counter = 0
     while True:
-        counter+=1
         line = rd.readline()
         if not line :
             break
@@ -28,10 +107,10 @@ def insert_comma():
             new_word = new_word.replace('   ',' ')
             new_word = new_word.replace('  ',' ')
             new_word = new_word.replace(' ',', ')
-            strip_word = word.strip()
-            if strip_word.lower() == terms[0].lower() :
+            word = word.strip()
+            if word.lower() == terms[0].lower() :
                 continue
-            if strip_word == '' or strip_word == ',' :
+            if word == '' or word == ',' :
                 continue
             new_words.append(new_word)
         new_line = ','.join(new_words)
@@ -127,15 +206,14 @@ def clean_debbris():
     content = substitutes(np_m_comma,',',content)
     content = substitutes(',,',',',content)
     content = substitutes(', ,',',',content)
+    content = substitutes('·','',content)
     workfiles.write_tmpfile(cnt,content,'w')
 
 def remove_spaces_between_words():
     print('removing spaces between words')
     rd = workfiles.read_lasttmp_or_output()
     cnt = workfiles.new_tmpfile()
-    counter = 0
     while True:
-        counter+=1
         line = rd.readline()
         if not line :
             break
@@ -152,8 +230,10 @@ def remove_spaces_between_words():
         workfiles.write_tmpfile(cnt,terms[0]+'\t'+new_line,'a')
     rd.close()
 
+workfiles.rem_tmpfiles()
 clean_debbris()
 insert_comma()
 remove_spaces_between_words()
 workfiles.count_words()
+workfiles.treat_line1001()
 workfiles.rem_tmpfiles_create_outfile()

@@ -1,190 +1,176 @@
-//https://translate.google.com.br/?sl=en&tl=pt&text=expensive&op=translate
-
-
-//document.querySelectorAll('.VIiyi')[1].innerText
-
-//document.querySelectorAll('.kgnlhe')[2].innerText
-
-//document.querySelectorAll('.YF3enc')[1].childNodes[2].classList
-
-//document.querySelectorAll('.YF3enc')[3].childNodes[0].classList[1]
-
-//childNodes sempre serao 3
-
-//classList sempre serao 2
-
-//frequency class full
-//.ksE5nf.EiZ8Dd
-
-//frequency low
-//.ksE5nf.fXx9Lc
-
 "use strict"
 var array = require('lodash/array');
 var files = require('../files');
 var util = require('../util');
-const json = require('../../config.json');
 const colors = require('colors/safe');
-const fs = require('fs');
-const path = require('path');
 var dateFormat = require('dateformat');
-
-const fail = util.result.fail;
-const success = util.result.success;
-
-const google = {
-    async waitTillHTMLRendered(page, timeout = 30000) {
-        const checkDurationMsecs = 1000;
-        const maxChecks = timeout / checkDurationMsecs;
-        let lastHTMLSize = 0;
-        let checkCounts = 1;
-        let countStableSizeIterations = 0;
-        const minStableSizeIterations = 3;
-      
-        while(checkCounts++ <= maxChecks){
-          let html = await page.content();
-          let currentHTMLSize = html.length; 
-      
-          let bodyHTMLSize = await page.evaluate(() => document.body.innerHTML.length);
-      
-          console.log('last: ', lastHTMLSize, ' <> curr: ', currentHTMLSize, " body html size: ", bodyHTMLSize);
-      
-          if(lastHTMLSize != 0 && currentHTMLSize == lastHTMLSize) 
-            countStableSizeIterations++;
-          else 
-            countStableSizeIterations = 0; //reset the counter
-      
-          if(countStableSizeIterations >= minStableSizeIterations) {
-            console.log("Page rendered fully..");
-            break;
-          }
-      
-          lastHTMLSize = currentHTMLSize;
-          await page.waitFor(checkDurationMsecs);
-        }  
-      },
-    async queryAuto(page, word, selector){
-        if(util.isCapitalized(word)){
-            return {"result":fail,"reason":'capitalized'};
-        }
-        let url = '';
-        if(json.env=='test'){
-            url = `file:///home/element/tutorials/puppeteer/html/google/${word}.html`;
-        } else {
-            url = `https://translate.google.com.br/?sl=en&tl=pt&text=${word}&op=translate`;
-        }
-        /*
-        await page.goto(url, { waitUntil: 'load' });
-        (async () => {
-            await this.sleep(1500);
-        })();
-        await this.waitTillHTMLRendered(page);
-        */
-       await this.loadUrl(page,url);
-        let html = await page.content();
-        let content = util.getDom(html,selector);
-        console.log(content.innerHTML);
-        return {"result":success,"reason":'ok'};
-    },
-    loadUrl: async function (page, url) {
-        try {
-            await page.goto(url, {
-                timeout: 20000,
-                waitUntil: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2']
-            })
-        } catch (error) {
-            throw new Error("url " + url + " url not loaded -> " + error)
-        }
-    },
-    sleep(millisecondsCount) {
-        if (!millisecondsCount) {
-            return;
-        }
-        return new Promise(resolve => setTimeout(resolve, millisecondsCount)).catch();
-    },
-    getTimeout(){
-        if(json.env=='test')
-            return 500;
-        else
-            return 10000;
-    },
-}
+var json = require('../../config.json');
 
 const scraperObject = {
-    async getContent(page, word, selector){
-        let result = await google.queryAuto(page, word, selector);
-        if(result.result==fail){
-            console.log(colors.red('fail:'+result.reason));
-            return '';
+    async typeWord(page, word) {
+        try{
+            await page.$eval('textarea[class="er8xn"]', el => el.value = '');
+            await page.keyboard.type(word);
+            await page.waitForSelector('span[class="VIiyi"]');
+        } catch (err) { 
+            return 'fail';
         }
-        util.sleepFor(this.getSleep());
-        let html = await page.content();
-        let content = util.getDom(html,selector);
-        return content;
+        return 'success';
     },
-    async scrape(browser){
+    async scrape(browser) {
+
         let words = files.loadInputFile();
-        let page = await browser.newPage();
-        await page.setDefaultTimeout(google.getTimeout());
-        await page.setDefaultNavigationTimeout(google.getTimeout());
-        let selector = '.VIiyi';
+
+        const page = await browser.newPage();
+
+        let sourceLang = 'en', targetLang = 'pt';
+
         let count = 0;
-        let startword = 0
-        if(startword==0){
+        let startLine = parseInt(json.startLine);
+        if(startLine==0){
+            if(files.exists()) {
+                files.appendLog('',fail,'arquivo existente!');
+                return;
+            }
             files.initializeLog();
             files.initializeFile();
         }
         let ini = new Date()
         files.appendLog('','',dateFormat(ini, "h:MM:ss l"));
-        for(let word of words){
+        
+        await page.goto(`https://translate.google.com/#view=home&op=translate&sl=${sourceLang}&tl=${targetLang}`);
+        await page.focus('textarea[class="er8xn"]');
+
+        for (let word of words) {
             count++;
-            if(count < startword) {
+            if (count < startLine) {
                 continue;
             }
             console.log(word);
-            let content = await this.getContent(page,word,selector);
-            if(content == null || content==''){
-                console.log(colors.red('nao encontrou'));
-                files.appendLog(word,fail,'nao encontrou');
-                files.appendFile(word+'\t');
-                files.appendNewLineFile();
+
+            if(util.isCapitalized(word)){
+                console.log(colors.red('capitalized'));
+                files.appendLog(word,'fail','capitalized');
+                files.appendFile(word+'\t\n');
                 continue;
             }
-            files.appendFile(word+'\t');
-            // let maintranslations = content.querySelectorAll('.VIiyi');
-            // for(let m = 0; m < maintranslations.length; m++){
-            //     files.appendFile(maintranslations[m].textContent+',');
-            // }
-            let sectranslations = content.querySelectorAll('.kgnlhe');
-            let translations = [];
-            for(let s = 0; s < sectranslations.length; s++){
-                let frequency = sectranslations[s].querySelectorAll('.YF3enc');
-                let blocks = 0;
-                for(let f = 0; f < frequency; f++){
-                    let block1 = frequency[f].childNodes[0].classList;
-                    let block2 = frequency[f].childNodes[1].classList;
-                    let block3 = frequency[f].childNodes[2].classList;
-                    if(block1[1]=='EiZ8Dd') blocks++;
-                    if(block2[1]=='EiZ8Dd') blocks++;
-                    if(block3[1]=='EiZ8Dd') blocks++;
-                }
-                translations.push('('+blocks+')'+sectranslations[s].textContent);
+
+            let result = await this.typeWord(page, word);
+            if (result == 'fail') {
+                console.log(colors.red('nao encontrou traducao principal'));
+                files.appendLog(word,'fail','nao encontrou traducao principal');
+                files.appendFile(word+'\t\n');
+                continue;
             }
-            files.appendFile(translations.join(',')+'\n');
+
+            await util.delay(2000);
+
+            let value = await page.$eval('textarea[class="er8xn"]', el => el.value);
+            if(value!=word){
+                result = await this.typeWord(page, word);
+                if (result == 'fail') {
+                    console.log(colors.red('nao encontrou traducao principal'));
+                    files.appendLog(word,'fail','nao encontrou traducao principal');
+                    files.appendFile(word+'\t\n');
+                    continue;
+                }
+            } else {
+                value = await page.$eval('textarea[class="er8xn"]', el => el.value);
+                if(value!=word){
+                    console.log(colors.red('nao encontrou'));
+                    files.appendLog(word,'fail','nao encontrou');
+                    files.appendFile(word+'\t\n');
+                    continue;
+                }
+            }
+
+            const mainTranslations = await page.evaluate(() => {
+                let main = document.querySelectorAll('.VIiyi');
+                let sexs = document.querySelectorAll('.NlvNvf');
+                list = [];
+                let term;
+                if(sexs != null && sexs.length==2) {
+                    term = main[1];
+                } else {
+                    term = main[0];
+                }
+                if (term.childNodes[0].nodeName != '#text') {
+                    let wordsTr = document.querySelectorAll('span[jsname="W297wb"]');
+                    wordsTr.forEach((w) => {
+                        list.push({"text":w.innerText,"frequency":undefined});
+                    });
+                } else {
+                    list.push({"text":term.innerText,"frequency":undefined});
+                }
+                return list;
+            });
+
+            const otherTranslations = await page.evaluate(() => {
+                let others = document.querySelectorAll('.KnIHac');
+                let blocks = document.querySelectorAll('.YF3enc');
+                list = [];
+                for(let o = 0; o < others.length; o++) {
+                    frequency = 0;
+                    let block1 = blocks[o].childNodes[0];
+                    let block2 = blocks[o].childNodes[1];
+                    let block3 = blocks[o].childNodes[2];
+                    let blockGray = 'fXx9Lc';
+                    if (block1.classList[1] == blockGray) {
+                        frequency = 0;
+                    } else if (block2.classList[1] == blockGray) {
+                        frequency = 1;
+                    } else if (block3.classList[1] == blockGray) {
+                        frequency = 2;
+                    } else {
+                        frequency = 3;
+                    }
+                    list.push({"text":others[o].textContent,"frequency":frequency});
+                }
+                return list;
+            });
+
+            if(otherTranslations.length==0 && mainTranslations.length==0){
+                console.log(colors.red('nao encontrou tradução'));
+                files.appendLog(word,'fail','nao encontrou tradução');
+                files.appendFile(word+'\t\n');
+                continue;
+            }
+
+            otherTranslations.sort((a,b) => b.frequency - a.frequency);
+
+            let allTranslations = [];
+            for(let m = 0; m < mainTranslations.length; m++) {
+                let main = mainTranslations[m];
+                for(let o = 0; o < otherTranslations.length; o++) {
+                    let other = otherTranslations[o];
+                    if(other.text.toLowerCase() == main.text.toLowerCase()) {
+                        mainTranslations.splice(m,1);
+                        m--;
+                        break;
+                    }
+                }
+            }
+
+            mainTranslations.forEach((main) => allTranslations.push(main));
+            otherTranslations.forEach((other) => allTranslations.push(other));
+            allTranslations = array.uniq(allTranslations);
+
+            let listText = [];
+            for (let i = 0; i < allTranslations.length; i++) {
+                if (allTranslations[i].frequency != undefined)
+                    listText.push('(' + allTranslations[i].frequency + ')' + allTranslations[i].text.trim());
+                else
+                    listText.push(allTranslations[i].text.trim());
+            }
+
+            console.log(listText.join(','));
+            files.appendFile(word+'\t'+listText.join(',') + '\n');
+
+            await util.delay(2000);
         }
         let end = new Date()
-        files.appendLog('','',dateFormat(end, "h:MM:ss l"));
-        files.appendLog('','','total de palavras:'+count);
-    },
-    getSleep(seconds){
-        if(json.env=='test')
-            return 100;
-        else {
-            if(seconds!=null && seconds!=undefined){
-                return seconds;
-            }
-            return 2000;
-        }
+        files.appendLog('', '', dateFormat(end, "h:MM:ss l"));
+        files.appendLog('', '', 'total de palavras:' + count);
     }
 }
 

@@ -1,12 +1,19 @@
+import workfiles
+
+workfiles.word_list = '1001-2000'
+workfiles.dictionary = 'google'
+
 def reorganizeTranslations():
-    rd = open ('4001-5000-googletranslator.csv', 'r')
-    counter = 0
+    print("""remove a term when have both male and female,
+    change the main translation to the front of translations,
+    sort the translations by frequency,
+    remove terms beggining with "o", "a", "os", "as"
+    """)
+    rd = workfiles.read_lasttmp_or_output()
+    cnt = workfiles.new_tmpfile()
     output = ''
     while True:
-        counter+=1
         line = rd.readline()
-        #if counter == 10 :
-        #    break
         if not line :
             break
         line = line[:-1]
@@ -36,9 +43,13 @@ def reorganizeTranslations():
             if others[term]=='*' :
                 others[term] = ''
             output += others[term]+term+','
+        output = output.replace(')a ',')').replace(')o ',')').replace(')os ',')').replace(')as ',')')
         output+='\n'
     rd.close()
-    file = open('4001-5000-googletranslator-reorganized2.csv','w')
-    file.write(output)
+    workfiles.write_tmpfile(cnt,output,'a')
 
+workfiles.rem_tmpfiles()
 reorganizeTranslations()
+workfiles.remove_last_comma()
+workfiles.treat_line1001()
+workfiles.rem_tmpfiles_create_outfile()
