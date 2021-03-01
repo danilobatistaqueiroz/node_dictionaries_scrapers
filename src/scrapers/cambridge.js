@@ -49,7 +49,7 @@ const cambridge = {
     },
     async queryDictionary(page, word, selector){
         if(util.isCapitalized(word)){
-            return util.result.fail;
+            return {"result":util.result.fail,"message":'capitalized'};
         }
         let url = `https://dictionary.cambridge.org/dictionary/english-portuguese/${word}`;
         let response;
@@ -57,20 +57,20 @@ const cambridge = {
             response = await page.goto(url);
         } catch (err) {
             console.log(colors.red(word+' : timeout'));
-            return util.result.fail;
+            return {"result":util.result.fail,"message":'timeout goto'};
         }
         const chain = response.request().redirectChain();
         if(chain.length==1){
-            return util.result.fail;
+            return {"result":util.result.fail,"message":'redirect'};
         }
         try{
-            await page.setDefaultTimeout(8000);
-            await page.setDefaultNavigationTimeout(8000);
+            await page.setDefaultTimeout(15000);
+            await page.setDefaultNavigationTimeout(15000);
             await page.waitForSelector(selector);
         } catch (err) {
-            return util.result.fail;
+            return {"result":util.result.fail,"message":'timeout selector'};
         }
-        return util.result.success;
+        return {"result":util.result.success,"message":'ok'};
     },
 }
 
@@ -86,34 +86,51 @@ const scraperObject = {
         return text;
     },
     async scrape(browser){
+        files.initialize();
         let words = files.loadInputFile();
         let page = await browser.newPage();
 
         let count = 0;
-        let startLine = parseInt(json.startLine);
-        if(startLine==0){
-            if(files.exists()) {
-                files.appendLog('',util.result.fail,'arquivo existente!');
-                return;
+        let startLine = 0;
+        if(files.exists()) {
+            let cntwords = files.getWordsInFile();
+            if(cntwords <= 1){
+                console.log(`arquivo ${files.outputFile} vazio!`);
+            } else if(cntwords > 1){
+                console.log(`arquivo ${files.outputFile} com ${cntwords} linhas!`);
+                if(cntwords > 999)
+                    return
+                startLine = cntwords+1
             }
+        }
+
+        if(startLine==0){
+            files.initializeLog();
             files.initializeFile();
         }
+
         let ini = new Date()
         files.appendLog('','',dateFormat(ini, "h:MM:ss l"));
-
         let mainSelector = '.entry-body.dentry-body';
+
+        let endLine = parseInt(json.endLine);
         for(let word of words){
             console.log(word);
             count++;
             if (count < startLine) {
                 continue;
             }
-            await util.delay(2000);
-            let result = await cambridge.queryDictionary(page, word,mainSelector);
-            if(result==util.result.fail){
+            if(count > endLine) {
+                break;
+            }
+
+            await util.delay(2200);
+            let infoquery = await cambridge.queryDictionary(page, word,mainSelector);
+            if(infoquery.result==util.result.fail){
                 console.log(colors.red('fail'));
-                files.appendLog(word, util.result.fail);
+                files.appendLog(word, util.result.fail,infoquery.message);
                 files.appendFile(`${word}\t\t\t\t\n`);
+                await util.delay(1000);
                 continue;
             }
             let html = await page.content();

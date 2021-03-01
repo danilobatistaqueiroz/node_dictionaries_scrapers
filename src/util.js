@@ -28,7 +28,9 @@ const util = {
     result : {
         success: 'success', fail: 'fail'
     },
-    async delay(ms) {new Promise(res => setTimeout(res, ms))},
+    async delay(ms) {
+        return new Promise(res => setTimeout(res, ms));
+    },
     sleepFor( sleepDuration ){
         var now = new Date().getTime();
         while(new Date().getTime() < now + sleepDuration){ /* do nothing */ } 

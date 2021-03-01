@@ -9,3 +9,7 @@ output/**
 input/**
 logs/**
 mp3/**
+post/out/**
+post/__pycache__
+post/tmp/**
+documents/Docx/**

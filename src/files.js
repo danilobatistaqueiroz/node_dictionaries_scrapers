@@ -4,9 +4,29 @@ const util = require('./util');
 const colors = require('colors/safe');
 
 const files = {
+    outputFile:'',
+    inputFile:'',
+    logFile:'',
+
+    initialize(){
+        this.outputFile = `output/${json.fileName}-${json.site}.${json.fileExt}`;
+        this.inputFile = `input/${json.fileName}.${json.fileExt}`;
+        this.logFile = `logs/${json.fileName}-${json.site}.log`;
+    },
+
+    getWordsInFile(){
+        const data = fs.readFileSync(this.outputFile, 'UTF-8');
+        const lines = data.split(/\r?\n/);
+        let count = 0
+        if(lines[lines.length-1]=='')
+            count = lines.length-1;
+        else
+            count = lines.length;
+        return count;
+    },
     loadInputFile(){
         try {
-            const data = fs.readFileSync(`input/${json.fileName}.${json.fileExt}`, 'UTF-8');
+            const data = fs.readFileSync(this.inputFile, 'UTF-8');
             const lines = data.split(/\r?\n/);
             return lines.map((line) => {
                 t = line.indexOf('\t');
@@ -20,7 +40,7 @@ const files = {
         }
     },
     initializeLog(){
-        fs.writeFile(`logs/${json.fileName}-${json.site}.log`,'', 'utf8',(err) => {if (err) throw err});
+        fs.writeFile(this.logFile,'', 'utf8',(err) => {if (err) throw err});
     },
     appendLog(word, result, message){
         if(result==util.result.fail)
@@ -28,21 +48,21 @@ const files = {
         else
             console.log(message);
         let data = word+'\t'+result+'\t'+message+'\n';
-        fs.appendFile(`logs/${json.fileName}-${json.site}.log`,data, 'utf8',(err) => {if (err) throw err});
+        fs.appendFile(this.logFile,data, 'utf8',(err) => {if (err) throw err});
     },
     exists(){
-        return fs.existsSync(`output/${json.fileName}-${json.site}.csv`);
+        return fs.existsSync(this.outputFile);
     },
     initializeFile(){
-        fs.writeFileSync(`output/${json.fileName}-${json.site}.csv`,'', 'utf8');
+        fs.writeFileSync(this.outputFile,'', 'utf8');
     },
     appendNewLineFile(){
         let data='\n';
-        fs.appendFileSync(`output/${json.fileName}-${json.site}.csv`,data, 'utf8');
+        fs.appendFileSync(this.outputFile,data, 'utf8');
     },
     appendFile(translations){
         let data = translations;
-        fs.appendFileSync(`output/${json.fileName}-${json.site}.csv`,data, 'utf8');
+        fs.appendFileSync(this.outputFile,data, 'utf8');
     }
 }
 

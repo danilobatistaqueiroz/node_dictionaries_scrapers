@@ -1,0 +1,1131 @@
+<html>
+    
+<meta charset="UTF-8">
+
+<style>
+button{height:22px; margin:0; padding:0; border:0; font-size:1em;text-indent:0;text-align:left}
+</style>
+
+<script>
+
+class SetTexts {
+    initialize(){
+        this.sites = ['Reverso','Google','Linguee','Cambridge','Deepl','Yandex'];
+        this.fullHtmls = {};
+        this.minHtmls = {};
+        this.minTexts = {};
+        this.configAllFullSpanHtml();
+        this.configAllMinTexts(this.fullHtmls);
+        this.configAllMinSpanHtml(this.fullHtmls, this.minTexts);
+        this.setAllSpanHtmls();
+        return {"fullHtmls":this.fullHtmls, "minHtmls":this.minHtmls};
+    }
+    configAllFullSpanHtml(){
+        for(let site of this.sites) {
+            this.fullHtmls[site] = this.getSpanHtml(site);
+        }
+    }
+    configAllMinTexts(fullHtmls){
+        for(let site of this.sites) {
+            let oSite = eval(`( new ${site}() )`);
+            let fullHtml = fullHtmls[site];
+            this.minTexts[site] = this.getMinText(oSite, fullHtml);
+        }
+    }
+    configAllMinSpanHtml(fullTexts, minTexts){
+        let wordsInManyDic = this._findInManyDic(minTexts);
+        for(let site of this.sites) {
+            let fullText = fullTexts[site];
+            const oSite = eval(`new ${site}()`);
+            let minTextBold = oSite.bolders(this.getMinText(oSite, fullText));
+            let minTextBoldReds = this.colorWordsInRed(oSite,wordsInManyDic,minTextBold)
+            this.minHtmls[site] = minTextBoldReds;
+        }
+    }
+    _findInManyDic(minTexts){
+        let inManyDic = new WordsInManyDic(minTexts);
+        return inManyDic.getRedWords();
+    }
+    colorWordsInRed(oSite,wordsInManyDic,minTextBold){
+        if(oSite.hasFrequency())
+            return this.colorWordsInRedFrequency(wordsInManyDic,minTextBold);
+        else
+            return this.colorWordsInRedSimple(wordsInManyDic,minTextBold);
+    }
+    colorWordsInRedFrequency(wordsInManyDic,minTextBold){
+        for(let word of wordsInManyDic){
+            let wordRed = `<b>${word}</b>`;
+            if(this.wordIsBold(minTextBold,word))
+                continue;
+            minTextBold = minTextBold.replace(`)${word},` , `)${wordRed},`);
+            if(this.wordIsLast(minTextBold, word)){
+                minTextBold = minTextBold.replace(`)${word}` , `)${wordRed}`);
+            }
+        }
+        return minTextBold;
+    }
+    wordIsBold(minTextBold,word){
+        let w = minTextBold.indexOf(word);
+        let lB = minTextBold.indexOf('<b>');
+        let rB = minTextBold.indexOf('</b>');
+        return (lB < w && rB > w);
+    }
+    colorWordsInRedSimple(wordsInManyDic,minTextBold){
+        for(let word of wordsInManyDic){
+            let wordRed = `<b>${word}</b>`;
+            minTextBold = minTextBold.replace(`,${word},` , `,${wordRed},`);
+            if(this.wordIsLast(minTextBold, word)){
+                minTextBold = minTextBold.replace(`,${word}` , `,${wordRed}`);
+            } else if(this.wordIsFirst(minTextBold, word)){
+                minTextBold = minTextBold.replace(`${word},` , `${wordRed},`);
+            }
+        }
+        return minTextBold;
+    }
+
+    wordIsLast(text,word){
+        return (text.substring(text.length-word.length,text.length)==word);
+    }
+    wordIsFirst(text,word){
+        return (text.substring(0,word.length)==word);
+    }
+
+    getSpanHtml(site, html){
+        return document.getElementById('sp'+site).innerHTML;
+    }
+    setSpanHtml(html){
+        let site = this.constructor.name;
+        document.getElementById('sp'+site).innerHTML = html;
+    }
+
+    setAllSpanHtmls(){
+        for(let site of this.sites) {
+            let html = this.minHtmls[site];
+            document.getElementById('sp'+site).innerHTML = html;
+        }
+    }
+
+    replaceAll(str, find, replace) {
+        return str.replace(new RegExp(find, 'g'), replace);
+    }
+
+    getMinText(oSite, fullText) {
+        if(oSite.hasMin()==false){
+            return fullText;
+        }
+        let content = fullText;
+		content = this.replaceAll(content, ', ' , ',')
+        let comma1, comma2, comma3, comma4 = '';
+        if (content != '') {
+            comma1 = content.indexOf(',');
+            if(comma1==-1) {
+                comma1 = content.length;
+            }
+            comma2 = content.indexOf(',',comma1+1);
+            if(comma2==-1) {
+                comma2 = content.length;
+            }
+            comma3 = content.indexOf(',',comma2+1);
+            if(comma3==-1) {
+                comma3 = content.length;
+            }
+            comma4 = content.indexOf(',',comma3+1);
+            if(comma4==-1) {
+                comma4 = content.length;
+            }
+            content =  content.substring(0,comma4);
+        }
+        return content;
+    }
+
+    createMinButton(oSite,minHtmls){
+        let site = oSite.constructor.name;
+        let bt = document.createElement('BUTTON');
+        let id = 'bt'+site+'Min';
+        bt.setAttribute('id',id);
+        bt.innerText = '-';
+        document.getElementById('sp'+site).parentElement.prepend(bt);
+        document.getElementById(id).style.display='none';
+        document.getElementById(id).addEventListener('click', (evt) => this.minimize(oSite,minHtmls[site]) );
+    }
+    createMaxButton(oSite,fullHtmls){
+        let site = oSite.constructor.name;
+        let bt = document.createElement('BUTTON');
+        let id = 'bt'+site+'Max';
+        bt.setAttribute('id',id);
+        bt.innerText = '+';
+        document.getElementById('sp'+site).parentElement.prepend(bt);
+        if(fullHtmls[site].split(',').length<=4)
+            document.getElementById(id).style.display='none';
+        else
+            document.getElementById(id).style.display='inline';
+        document.getElementById(id).addEventListener('click', (evt) => this.maximize(oSite,fullHtmls[site]) );
+    }
+    minimize(oSite,html){
+        document.getElementById('bt'+oSite.constructor.name+'Max').style.display='inline';
+        document.getElementById('bt'+oSite.constructor.name+'Min').style.display='none';
+        oSite.setSpanHtml(html);
+    }
+    maximize(oSite,html){
+        document.getElementById('bt'+oSite.constructor.name+'Min').style.display='inline';
+        document.getElementById('bt'+oSite.constructor.name+'Max').style.display='none';
+        oSite.setSpanHtml(html);
+    }
+}
+
+class HighFrequency {
+    constructor(site, minText) {
+        this.minText = minText;
+        this.site = site;
+    }
+    _getFrequencies(content) {
+        let lRound=-1;
+        let rRound=-1;
+        let frequencies = [];
+        while(true) {
+            lRound = content.indexOf('(',lRound+1);
+            rRound = content.indexOf(')',rRound+1);
+            if(lRound == -1) {
+                return frequencies;
+            }
+            let freq = content.substring(lRound+1,rRound);
+            freq = parseInt(freq);
+            frequencies.push(freq);
+        }
+    }
+    _getMainFrequencies() {
+        if (this.minText == '')
+            return [];
+        else
+            return this._getFrequencies(this.minText);
+    }
+    higherFrequencies() {
+        let frequencies = this._getMainFrequencies();
+        return this.site._higherFrequencies(frequencies);
+    }
+}
+
+class Reverso extends SetTexts {
+    configure(fullHtmls, minHtmls){
+        super.createMinButton(this,minHtmls);
+        super.createMaxButton(this,fullHtmls);
+    }
+    higherFrequencies(){
+        let high = new HighFrequency(this);
+        return high.higherFrequencies();
+    }
+    _higherFrequencies(frequencies) {
+        let anterior = 0;
+        let highers = [];
+        for(let freq of frequencies){
+            if( (anterior/3) > freq){
+                return highers;
+            }
+            highers.push(freq);
+            anterior = freq;
+        }
+        return highers;
+    }
+    bolders(rMinText){
+        let high = new HighFrequency(this,rMinText);
+        let freq = high.higherFrequencies();
+        let i = -1;
+        freq.forEach((f) => {
+            i = rMinText.indexOf('('+f+')',i+1);
+        });
+        i = rMinText.indexOf(',',i);
+        if(i==-1)
+            i = rMinText.length;
+        let bolds = rMinText.substring(0,i+1);
+        let others = rMinText.substring(i+1,rMinText.length);
+        return `<b>${bolds}</b>${others}`;
+    }
+    hasFrequency(){return true;}
+    hasMin(){return true;}
+}
+
+class Google extends SetTexts {
+    configure(fullHtmls, minHtmls){
+        super.createMinButton(this,minHtmls);
+        super.createMaxButton(this,fullHtmls);
+    }
+    higherFrequencies(gMinText){
+        let high = new HighFrequency(this,gMinText);
+        return high.higherFrequencies();
+    }
+    _higherFrequencies(frequencies) {
+        let highers = [];
+        for(let freq of frequencies){
+            if(freq==3)
+                highers.push(freq);
+        }
+        return highers;
+    }
+    bolders(gMinText){
+        gMinText = this.replaceAll(gMinText, ', ' , ',' )
+        let high = new HighFrequency(this,gMinText);
+        let freq = high.higherFrequencies();
+        let i = -1;
+        freq.forEach(() => {
+            i = gMinText.indexOf('(3)',i+1);
+        });
+        i = gMinText.indexOf(',',i);
+        let bolds = gMinText.substring(0,i+1);
+        let others = gMinText.substring(i+1,gMinText.length);
+        return `<b>${bolds}</b>${others}`;
+    }
+    hasFrequency(){return true;}
+    hasMin(){return true;}
+}
+
+class Linguee extends SetTexts {
+    configure(fullHtmls, minHtmls){
+        super.createMinButton(this,minHtmls);
+        super.createMaxButton(this,fullHtmls);
+    }
+    bolders(linMinText){return linMinText;}
+    hasMin(){return true;}
+    hasFrequency(){return false;}
+}
+
+class Cambridge { 
+    bolders(cMinText){ return cMinText; }
+    hasMin() { return false; }
+    hasFrequency() { return false; }
+}
+class Deepl { 
+    bolders (dMinText) { return dMinText; }
+    hasMin() { return false; }
+    hasFrequency() { return false; }
+}
+class Yandex { 
+    bolders (yMinText) { return yMinText; }
+    hasMin() { return false; }
+    hasFrequency() { return false; }
+}
+
+class WordsInManyDic {
+    constructor(minTexts){
+        this.minTexts = minTexts;
+        this.sitesForSearch = ['Reverso', 'Google', 'Linguee', 'Cambridge'];
+    }
+    _convertStringToArray() {
+        let wordsSites = {};
+        for(let site in this.minTexts) {
+            let texts = this.replaceAll(this.minTexts[site], ', ' , ',')
+            wordsSites[site] = texts.split(',');
+        }
+        return wordsSites;
+    }
+    replaceAll(str, find, replace) {
+        return str.replace(new RegExp(find, 'g'), replace);
+    }
+    getRedWords() {
+        let wordsSites = this._convertStringToArray();
+        let reds = [];
+        for(let site of this.sitesForSearch){
+            for(let wordFreq of wordsSites[site]){
+                let word = wordFreq.replace(/\(\d*\)/,'');
+                reds.push(this._compareWithOthers(wordsSites, site, word));
+            }
+        }
+        reds = reds.filter(this.unique);
+        reds = this.removeNulls(reds);
+        return reds;
+    }
+
+    removeNulls(array){
+        return array.filter(function(e){return e});
+    }
+    unique(value, index, self) {
+        return self.indexOf(value) === index;
+    }
+
+    _compareWithOthers(wordsSites, site, word) {
+        let counter = 0;
+        for(let otherSite in wordsSites){
+            if(otherSite != site) {
+                for(let w of wordsSites[otherSite]){
+                    w = w.replace(/\(\d*\)/,'');
+                    if(w == word){
+                        counter++;
+                    }
+                }
+            }
+        }
+        if (counter >= 2)
+            return word;
+        else 
+            return null;
+    }
+}
+
+function initializeClasses(){
+    let texts = new SetTexts().initialize();
+        new Google().configure(texts.fullHtmls, texts.minHtmls);
+        new Reverso().configure(texts.fullHtmls, texts.minHtmls);
+        new Linguee().configure(texts.fullHtmls, texts.minHtmls);
+}
+</script>
+
+
+<!--Show / Hide Empty Definitions, Translations, IPAs -->
+<script>
+function hideEmptyTranslations(){
+    let dictionaries = ['Cambridge','Reverso','Google','Linguee','Deepl','Yandex','Freedic','Babla','Wordreference','Other'];
+    for(let dic of dictionaries){
+        let pt = document.querySelector(`#dv${dic} #sp${dic}`);
+        if (pt != undefined) {
+            if (pt.textContent.trim() == ''){
+                document.getElementById(`dv${dic}`).style.display='none';
+            }
+        }
+    }
+}
+function hideEmptyDefinitions(){
+    let dictionaries = ['Macmillan','Pons','Cambridge','Thesaurus','Freedic','Collins','Macmillan','Pons','Urban','Wordreference','Other'];
+    for(let dic of dictionaries){
+        let definition = document.querySelector(`#dv${dic}Def #sp${dic}Def`);
+        if (definition) {
+            if (definition.textContent.trim() == ''){
+                document.getElementById(`dv${dic}Def`).style.display='none';
+                if (document.getElementById(`btShow${dic}Def`) != null)
+                	document.getElementById(`btShow${dic}Def`).style.display='none';
+            }
+        }
+    }
+}
+function hideEmptyIpas(){
+    let ipaUK = document.querySelectorAll('#dvIpaUK .ipa');
+    for (ipa of ipaUK){
+        if (ipa.textContent.trim() == ''){
+            document.getElementById('dvIpaUK').style.display='none';
+        }
+    }
+    let ipaUS = document.querySelectorAll('#dvIpaUS .ipa');
+    let allIpaUSEmpty = true;
+    for (ipa of ipaUS){
+        if (ipa.textContent.trim() == ''){
+            ipa.style.display='none';
+        } else {
+            allIpaUSEmpty = false;
+        }
+    }
+    if (allIpaUSEmpty){
+        document.getElementById('dvIpaUS').style.display='none';
+    }
+}
+function hideEmptyPhrases(){
+    let dictionaries = ['Other','Macmillan','Pons','Linguee','Freedic','Reverso','Collins','Wordreference','Cambridge'];
+    for(let dic of dictionaries){
+        let enPhrases = document.getElementById(`en${dic}Phrases`);
+        let ptPhrases = document.getElementById(`pt${dic}Phrases`);
+        entxt = '';
+        pttxt = '';
+        if (enPhrases) 
+            entxt = enPhrases.textContent.trim();
+        if (ptPhrases) 
+            pttxt = ptPhrases.textContent.trim();
+        if (entxt == '' && pttxt == ''){
+            document.getElementById(`dv${dic}Phrases`).style.display='none';
+        }
+    }
+}
+function showDef(dic){
+		document.getElementById(`sp${dic}Def`).style.display='block';
+		document.getElementById(`btHide${dic}Def`).style.display='inline';
+}
+function hideDef(dic){
+		document.getElementById(`sp${dic}Def`).style.display='none';
+		document.getElementById(`btHide${dic}Def`).style.display='none';
+}
+
+function showPhr(dic){
+		document.getElementById(`en${dic}Phrases`).style.display='block';
+		document.getElementById(`btHide${dic}Phr`).style.display='inline';
+}
+function hidePhr(dic){
+		document.getElementById(`en${dic}Phrases`).style.display='none';
+		document.getElementById(`btHide${dic}Phr`).style.display='none';
+}
+
+function showPtPhr(dic){
+		document.getElementById(`pt${dic}Phrases`).style.display='block';
+		document.getElementById(`btHide${dic}PtPhr`).style.display='inline';
+}
+function hidePtPhr(dic){
+		document.getElementById(`pt${dic}Phrases`).style.display='none';
+		document.getElementById(`btHide${dic}PtPhr`).style.display='none';
+}
+</script>
+
+
+
+<!--Show / Hide Details of Phrases -->
+<script>
+
+function hideOtherDetailsPhrases(){
+	hideOtherExplanation();
+	hideOtherTrsPhrase();
+	hideOtherTranslation();
+}
+function hideOtherTranslation(){
+	html = document.getElementById('enOtherPhrases').innerHTML;
+	html = replaceTranslation(html);
+	document.getElementById('enOtherPhrases').innerHTML = html;
+}
+function hideOtherExplanation(){
+    html = document.getElementById('enOtherPhrases').innerHTML;
+    html = replaceExplanation(html);
+    html = replaceExplanationRGB(html);
+    document.getElementById('enOtherPhrases').innerHTML = html;
+}
+function hideOtherTrsPhrase(){
+	html = document.getElementById('enOtherPhrases').innerHTML;
+	html = replaceTrsPhrase(html);
+	document.getElementById('enOtherPhrases').innerHTML = html;
+}
+function showOtherDetailsPhrases(){
+	document.getElementById('enOtherPhrases').innerHTML = fullOtherPhrase;
+}
+
+function hideOldFreedicTranslation(){
+	html = document.getElementById('enFreedicPhrases').innerHTML;
+	html = html.replace(/<i><u>\s*([\w→çã ]*)\s*<\/u><\/i>/gi, '');
+	document.getElementById('enFreedicPhrases').innerHTML = html;
+}
+function hideFreedicTranslation(){
+	html = document.getElementById('enFreedicPhrases').innerHTML;
+	html = replaceTranslation(html);
+	document.getElementById('enFreedicPhrases').innerHTML = html;
+}
+function hideFreedicTrsPrhase(){
+	html = document.getElementById('enFreedicPhrases').innerHTML;
+	html = replaceTrsPhrase(html);
+	document.getElementById('enFreedicPhrases').innerHTML = html;
+}
+function hideOldFreedicExplanation(){
+	html = document.getElementById('enFreedicPhrases').innerHTML;
+	html = html.replace(/(\d+).\s([\w\s\.\;\,\:\-\_\!\?\+\|\=\*\(\)\[\]\{\}\'\d]+).\s+/gi, '');
+	document.getElementById('enFreedicPhrases').innerHTML = html;
+}
+function hideFreedicExplanation(){
+	html = document.getElementById('enFreedicPhrases').innerHTML;
+	html = replaceExplanation(html);
+	document.getElementById('enFreedicPhrases').innerHTML = html;
+}
+function hideFreedicDetailsPhrases(){
+	hideFreedicTranslation();
+	hideFreedicExplanation();
+	hideFreedicTrsPrhase();
+	hideOldFreedicTranslation();
+	hideOldFreedicExplanation();
+}
+function showFreedicDetailsPhrases(){
+	document.getElementById('enFreedicPhrases').innerHTML = fullFreedicPhrase;
+}
+
+function hideMacmillanDetailsPhrases(){
+	hideMacmillanExplanation();
+	hideMacmillanTrsPhrase();
+	hideMacmillanTranslation();
+}
+function hideMacmillanTranslation(){
+	html = document.getElementById('enMacmillanPhrases').innerHTML;
+	html = replaceTranslation(html);
+	document.getElementById('enMacmillanPhrases').innerHTML = html;
+}
+function hideMacmillanExplanation(){
+    html = document.getElementById('enMacmillanPhrases').innerHTML;
+    html = replaceExplanation(html);
+    document.getElementById('enMacmillanPhrases').innerHTML = html;
+}
+function hideMacmillanTrsPhrase(){
+	html = document.getElementById('enMacmillanPhrases').innerHTML;
+	html = replaceTrsPhrase(html);
+	document.getElementById('enMacmillanPhrases').innerHTML = html;
+}
+
+function hideWordreferenceTranslation(){
+	html = document.getElementById('enWordreferencePhrases').innerHTML;
+	html = html.replace(/<i><u><font color="#aa4444">(.*?)<\/font><\/u><\/i>/gi, '<i><u><font color="#aa4444">_____</font></u></i>');
+	document.getElementById('enWordreferencePhrases').innerHTML = html;
+}
+function hideWordreferenceExplanation(){
+	html = document.getElementById('enWordreferencePhrases').innerHTML;
+	html = replaceExplanation(html);
+	document.getElementById('enWordreferencePhrases').innerHTML = html;
+}
+function hideWordreferencePtPhrase(){
+    html = document.getElementById('enWordreferencePhrases').innerHTML;
+    html = replaceTrsPhrase(html);
+	document.getElementById('enWordreferencePhrases').innerHTML = html;
+}
+function hideWordreferenceDetailsPhrases(){
+	hideWordreferenceExplanation();
+    hideWordreferenceTranslation();
+    hideWordreferencePtPhrase();
+}
+function showWordreferenceDetailsPhrases(){
+	document.getElementById('enWordreferencePhrases').innerHTML = fullWordreferencePhrase;
+}
+
+function hideLingueeDetailsPhrases(){
+	hideLingueeExplanation();
+	hideLingueeTrsPhrase();
+	hideLingueeTranslation();
+}
+function hideLingueeTranslation(){
+	html = document.getElementById('enLingueePhrases').innerHTML;
+	html = replaceTranslation(html);
+	document.getElementById('enLingueePhrases').innerHTML = html;
+}
+function hideLingueeExplanation(){
+    html = document.getElementById('enLingueePhrases').innerHTML;
+    html = replaceExplanation(html);
+    document.getElementById('enLingueePhrases').innerHTML = html;
+}
+function hideLingueeTrsPhrase(){
+	html = document.getElementById('enLingueePhrases').innerHTML;
+	html = replaceTrsPhrase(html);
+	document.getElementById('enLingueePhrases').innerHTML = html;
+}
+function showLingueeDetailsPhrases(){
+	document.getElementById('enLingueePhrases').innerHTML = fullLingueePhrase;
+}
+
+
+function hideCollinsDetailsPhrases(){
+	hideCollinsExplanation();
+	hideCollinsTrsPhrase();
+	hideCollinsTranslation();
+}
+function hideCollinsTranslation(){
+	html = document.getElementById('enCollinsPhrases').innerHTML;
+	html = replaceTranslation(html);
+	document.getElementById('enCollinsPhrases').innerHTML = html;
+}
+function hideCollinsExplanation(){
+    html = document.getElementById('enCollinsPhrases').innerHTML;
+    html = replaceExplanation(html);
+    document.getElementById('enCollinsPhrases').innerHTML = html;
+}
+function hideCollinsTrsPhrase(){
+	html = document.getElementById('enCollinsPhrases').innerHTML;
+	html = replaceTrsPhrase(html);
+	document.getElementById('enCollinsPhrases').innerHTML = html;
+}
+function showCollinsDetailsPhrases(){
+	document.getElementById('enCollinsPhrases').innerHTML = fullCollinsPhrase;
+}
+
+
+function hideCambridgeTranslation(){
+	html = document.getElementById('enCambridgePhrases').innerHTML;
+	html = html.replace(/<i><u><font color="#aa4444">(.*?)<\/font><\/u><\/i>/gi, '<i><u><font color="#aa4444">_____</font></u></i>');
+	document.getElementById('enCambridgePhrases').innerHTML = html;
+}
+function hideCambridgeExplanation(){
+	html = document.getElementById('enCambridgePhrases').innerHTML;
+	html = replaceExplanation(html);
+	document.getElementById('enCambridgePhrases').innerHTML = html;
+}
+function hideCambridgePtPhrase(){
+    html = document.getElementById('enCambridgePhrases').innerHTML;
+    html = replaceTrsPhrase(html);
+	document.getElementById('enCambridgePhrases').innerHTML = html;
+}
+function hideCambridgeDetailsPhrases(){
+	hideCambridgeExplanation();
+    hideCambridgeTranslation();
+    hideCambridgePtPhrase();
+}
+function showCambridgeDetailsPhrases(){
+	document.getElementById('enCambridgePhrases').innerHTML = fullCambridgePhrase;
+}
+
+function replaceTrsPhrase(html){
+    let i = 0;
+    while (i >= 0) {
+        i = html.indexOf('<i>"',i);
+        if (i==-1)
+            return html;
+        let e = html.indexOf('"</i>',i);
+        if (e==-1)
+            return html;
+        let ini = html.substring(0,i-1);
+        let end = html.substring(e,html.length);
+        html = ini+' <br>""'+end;
+    }
+}
+function replaceExplanationRGB(html){
+    let i = 0;
+    while (i >= 0) {
+        i = html.indexOf('<i style="color: rgb(199, 199, 199);">',i);
+        if (i==-1)
+            return html;
+        let e = html.indexOf('</i>',i);
+        if (e==-1)
+            return html;
+        let ini = html.substring(0,i);
+        let end = html.substring(e,html.length);
+        html = ini+end;
+    }
+}
+function replaceExplanation(html){
+    let i = 0;
+    let beginningText = '<font color="#c7c7c7"><i>';
+    while (i >= 0) {
+        i = html.indexOf(beginningText,i);
+        if (i==-1)
+            return html;
+        let e = html.indexOf('</i></font>',i);
+        if (e==-1)
+            return html;
+        let ini = html.substring(0,i);
+        let end = html.substring(e,html.length);
+        html = ini+' '+end;
+    }
+}
+function replaceTranslation(html){
+	startTag = '<i><u><font color="#aa4444">';
+    let i = 0;
+    while (i >= 0) {
+        i = html.indexOf(startTag,i+1);
+		beginningText = startTag.length+i;
+        if (i==-1)
+            return html;
+        let endText = html.indexOf('</font></u></i>',i);
+        if (endText==-1)
+            return html;
+        let ini = html.substring(0,beginningText);
+        let end = html.substring(endText,html.length);
+        hidden = "_".repeat(endText-beginningText);
+        html = ini+hidden+end;
+    }
+}
+function showMacmillanDetailsPhrases(){
+	document.getElementById('enMacmillanPhrases').innerHTML = fullMacmillanPhrase;
+}
+</script>
+
+
+
+<!-- Load Scripts -->
+<script>
+    function loadScripts () {
+        initializeClasses();
+        hideEmptyTranslations();
+        hideEmptyDefinitions();
+        hideEmptyIpas();
+        hideEmptyPhrases();
+
+        fullOtherPhrase = document.getElementById('enOtherPhrases').innerHTML;
+        if (fullOtherPhrase.trim() == ''){
+            document.getElementById('btShowOtherDetailsPhrases').style.display='none';
+            document.getElementById('btHideOtherDetailsPhrases').style.display='none';
+        }
+        hideOtherDetailsPhrases();
+    
+        fullFreedicPhrase = document.getElementById('enFreedicPhrases').innerHTML;
+        if (fullFreedicPhrase.trim() == ''){
+            document.getElementById('btShowFreedicDetailsPhrases').style.display='none';
+            document.getElementById('btHideFreedicDetailsPhrases').style.display='none';
+        }
+        hideFreedicDetailsPhrases();
+    
+        fullMacmillanPhrase = document.getElementById('enMacmillanPhrases').innerHTML;
+        if (fullMacmillanPhrase.trim() == ''){
+            document.getElementById('btShowMacmillanDetailsPhrases').style.display='none';
+            document.getElementById('btHideMacmillanDetailsPhrases').style.display='none';
+        }
+        hideMacmillanDetailsPhrases();
+    
+        fullWordreferencePhrase = document.getElementById('enWordreferencePhrases').innerHTML;
+        if (fullWordreferencePhrase.trim() == ''){
+            document.getElementById('btShowWordreferenceDetailsPhrases').style.display='none';
+            document.getElementById('btHideWordreferenceDetailsPhrases').style.display='none';
+        }
+        hideWordreferenceDetailsPhrases();
+        
+        fullLingueePhrase = document.getElementById('enLingueePhrases').innerHTML;
+        if (fullLingueePhrase.trim() == ''){
+            document.getElementById('btShowLingueeDetailsPhrases').style.display='none';
+            document.getElementById('btHideLingueeDetailsPhrases').style.display='none';
+        }
+        hideLingueeDetailsPhrases();
+    
+        fullCollinsPhrase = document.getElementById('enCollinsPhrases').innerHTML;
+        if (fullCollinsPhrase.trim() == ''){
+            document.getElementById('btShowCollinsDetailsPhrases').style.display='none';
+            document.getElementById('btHideCollinsDetailsPhrases').style.display='none';
+        }
+        hideCollinsDetailsPhrases();
+    
+        fullCambridgePhrase = document.getElementById('enCambridgePhrases').innerHTML;
+        if (fullCambridgePhrase.trim() == ''){
+            document.getElementById('btShowCambridgeDetailsPhrases').style.display='none';
+            document.getElementById('btHideCambridgeDetailsPhrases').style.display='none';
+        }
+        hideCambridgeDetailsPhrases();
+    }
+</script>
+
+
+
+
+<style>
+    .blue-title {
+        color: #3ff;
+        font-weight: bold;
+    }
+</style>
+
+    <div style="text-align:center;">
+        <span class="blue-title">{{word}}</span><br>
+    </div>
+
+    <hr>
+        
+    <div id="translations">
+  
+        <div style="text-align:center;">
+            <span class="blue-title">translations(1-10): </span>
+        </div>
+
+        <div id="dvReverso" style="display:inline">
+            <span class="blue-title">1.reverso:</span>
+            <span id="spReverso">{{reverso-pt}}</span>
+            <br>
+        </div>
+        
+        <div id="dvGoogle" style="display:inline">
+            <span class="blue-title">2.google:</span>
+            <span id="spGoogle">{{google-pt}}</span>
+            <br>
+        </div>
+        
+        <div id="dvLinguee" style="display:inline">
+            <span class="blue-title">3.linguee:</span>
+            <span id="spLinguee">{{linguee-definition}}</span>
+            <br>
+        </div>
+    
+        <div id="dvCambridge" style="display:inline">
+            <span class="blue-title">4.cambridge:</span>
+            <span id="spCambridge">{{cambridge-pt}}</span>
+            <br>
+        </div>
+        
+        <div id="dvDeepl" style="display:inline">
+            <span class="blue-title">5.deepl:</span>
+            <span id="spDeepl">{{deepl-pt}}</span>
+            <br>
+        </div>
+    
+        <div id="dvYandex" style="display:inline">
+            <span class="blue-title">6.yandex:</span>
+            <span id="spYandex">{{yandex-pt}}</span>
+            <br>
+        </div>
+
+        <div id="dvFreedic" style="display:inline">
+            <span class="blue-title">7.freedic:</span>
+            <span id="spFreedic">{{freedic-pt}}</span>
+            <br>
+        </div>
+
+        <div id="dvBabla" style="display:inline">
+            <span class="blue-title">8.babla:</span>
+            <span id="spBabla">{{babla-pt}}</span>
+            <br>
+        </div>
+
+        <div id="dvWordreference" style="display:inline">
+            <span class="blue-title">9.word reference:</span>
+            <span id="spWordreference">{{wordreference-pt}}</span>
+            <br>
+        </div>
+
+        <div id="dvOther" style="display:inline">
+            <span class="blue-title">10.other:</span>
+            <span id="spOther">{{other-pt}}</span>
+            <br>
+        </div>
+    
+    </div>
+
+    <hr>
+
+    <div id="ipas">
+
+        <div id="dvIpaUK" style="display:inline">
+            <span class="blue-title">uk-ipa:</span> 
+            <span class="ipa">{{yandex-en-uk-ipa}}</span>
+            <br>
+        </div>
+        <div id="dvIpaUS" style="display:inline">
+            <span class="blue-title">us-ipa:</span> 
+            <span class="ipa">{{macmillan-ipa}} &nbsp;</span>
+            <span class="ipa">{{tophonetic-en-us-ipa}} &nbsp;</span>
+            <span class="ipa">{{cambridge-en-us-ipa}} &nbsp;</span>
+            <span class="ipa">{{thesaurus-en-us-ipa}} &nbsp;</span>
+            <span class="ipa">{{upondn-ipa}} &nbsp;</span>
+            <span class="ipa">{{freedic-ipa}} &nbsp;</span>
+            <span class="ipa">{{collins-ipa}} &nbsp;</span>
+            <span class="ipa">{{pons-ipa}} &nbsp;</span>
+        </div>
+
+    </div>
+
+    <hr>
+
+    <div id="definitions">
+
+        <div style="text-align:center;">
+            <span class="blue-title">definitions(1-9): </span>
+        </div>
+        <div id="dvDefinitions">
+            <div id="dvCambridgeDef">
+                <span class="blue-title">1.cambridge: </span>
+                <br>
+                <span id="spCambridgeDef">{{cambridge-definition}}</span>
+                <br>
+            </div>
+            <div id="dvThesaurusDef">
+                <span class="blue-title">2.thesaurus: </span>
+                <br>
+                <span id="spThesaurusDef">{{thesaurus-definition}}</span>
+                <br>
+            </div>
+            <div id="dvFreedicDef">
+                <span class="blue-title">3.freedic: </span>
+                <button id="btShowFreedicDef" onclick="showDef('Freedic');">+</button>
+                <button id="btHideFreedicDef" onclick="hideDef('Freedic');" style="display:none">-</button>
+                <br>
+                <span id="spFreedicDef" style="display:none">{{freedic-definition}}</span>
+                <br>
+            </div>
+            <div id="dvCollinsDef">
+                <span class="blue-title">4.collins: </span>
+                <br>
+                <span id="spCollinsDef">{{collins-definition}}</span>
+                <br>
+            </div>
+            <div id="dvMacmillanDef">
+                <span class="blue-title">5.macmillan:</span>
+                <br>
+                <span id="spMacmillanDef">{{macmillan-definition}}</span>
+                <br>
+            </div>
+            <div id="dvPonsDef">
+                <span class="blue-title">6.pons:</span>
+                <br>
+                <span id="spPonsDef">{{pons-definition}}</span>
+                <br>
+            </div>
+            <div id="dvUrbanDef">
+                <span class="blue-title">7.urban dictionary:</span>
+                <br>
+                <span id="spUrbanDef">{{urbandictionary-definition}}</span>
+            </div>
+            <div id="dvWordreferenceDef">
+                <span class="blue-title">8.wordreference:</span>
+                <button id="btShowWordreferenceDef" onclick="showDef('Wordreference');">+</button>
+                <button id="btHideWordreferenceDef" onclick="hideDef('Wordreference');" style="display:none">-</button>
+                <br>
+                <span id="spWordreferenceDef" style="display:none">{{wordreference-definition}}</span>
+            </div>
+			<div id="dvOtherDef">
+				<span class="blue-title">9.other:</span>
+				<br>
+				<span id="spOtherDef">{{other-definition}}</span>
+			</div>
+        </div>
+
+    <div>
+
+    <hr>
+
+    <div id="phrases">
+    
+        <div id="dvOtherPhrases">
+            <div style="text-align:center;">
+                <span class="blue-title">phrases: </span>
+            </div>
+            <br>
+            <hr>
+            <span class="blue-title">english:</span>
+            <button id="btShowOtherDetailsPhrases" onclick="showOtherDetailsPhrases()">+</button>
+            <button id="btHideOtherDetailsPhrases" onclick="hideOtherDetailsPhrases()">-</button>
+            <br>
+            <span id="enOtherPhrases">{{en-phrases}}</span>
+            <hr>
+            <span class="blue-title">portuguese:</span>
+            <br>
+            <span id="ptOtherPhrases">{{pt-phrases}}</span>
+			<hr>
+            <span class="blue-title">meanings:</span>
+            <br>
+            <span id="phrases-meanings">{{meanings-in-phrases}}</span>
+            <hr>
+        </div>
+
+        <div id="dvMacmillanPhrases">
+            <div style="text-align:center;">
+                <span class="blue-title">macmillan phrases: </span>
+            </div>
+            <br>
+            <hr>
+            <span class="blue-title">english:</span>
+            <button id="btShowMacmillanDetailsPhrases" onclick="showMacmillanDetailsPhrases()">+</button>
+            <button id="btHideMacmillanDetailsPhrases" onclick="hideMacmillanDetailsPhrases()">-</button>
+            <br>
+            <span id="enMacmillanPhrases">{{macmillan-phrases}}</span>
+            <hr>
+            <span class="blue-title">portuguese:</span>
+            <br>
+            <span id="ptMacmillanPhrases">{{macmillan-phrases-pt}}</span>
+            <hr>
+        </div>
+
+        <div id="dvPonsPhrases">
+            <div style="text-align:center;">
+                <span class="blue-title">pons phrases: </span>
+            </div>
+            <br>
+            <hr>
+            <span class="blue-title">english:</span>
+            <br>
+            <span id="enPonsPhrases">{{pons-phrases}}</span>
+            <hr>
+            <span class="blue-title">portuguese:</span>
+            <br>
+            <span id="ptPonsPhrases">{{pons-phrases-pt}}</span>
+            <hr>
+        </div>
+
+        <div id="dvLingueePhrases">
+            <div style="text-align:center;">
+                <span class="blue-title">linguee phrases: </span>
+            </div>
+            <br>
+            <hr>
+            <span class="blue-title">english:</span>
+                <button id="btShowLingueeDetailsPhrases" onclick="showLingueeDetailsPhrases();">+</button>
+                <button id="btHideLingueeDetailsPhrases" onclick="hideLingueeDetailsPhrases();">-</button>
+            <br>
+            <span id="enLingueePhrases">{{linguee-phrases}}</span>
+            <hr>
+            <span class="blue-title">portuguese:</span>
+            <br>
+            <span id="ptLingueePhrases">{{linguee-phrases-pt}}</span>
+            <hr>
+            <span class="blue-title">expressions:</span>
+            <br>
+            <span id="ptLingueeExpressions">{{linguee-expressions}}</span>
+            <hr>
+        </div>
+
+        <div id="dvFreedicPhrases">
+            <div style="text-align:center;">
+                <span class="blue-title">free dictionary phrases: </span>
+            </div>
+            <br>
+            <hr>
+            <span class="blue-title">english:</span>
+			<button id="btShowFreedicDetailsPhrases" onclick="showFreedicDetailsPhrases()">+</button>
+			<button id="btHideFreedicDetailsPhrases" onclick="hideFreedicDetailsPhrases()">-</button>
+            <br>
+            <span id="enFreedicPhrases">{{freedic-phrases}}</span>
+            <hr>
+            <span class="blue-title">portuguese:</span>
+            <br>
+            <span id="ptFreedicPhrases">{{freedic-phrases-pt}}</span>
+            <hr>
+        </div>
+
+        <div id="dvReversoPhrases">
+            <div style="text-align:center;">
+                <span class="blue-title">reverso phrases: </span>
+            </div>
+            <br>
+            <hr>
+            <span class="blue-title">english:</span>
+            <button id="btShowReversoPhr" onclick="showPhr('Reverso');">+</button>
+            <button id="btHideReversoPhr" onclick="hidePhr('Reverso');" style="display:none">-</button>
+            <br>
+            <span id="enReversoPhrases" style="display:none">{{reverso-phrases}}</span>
+            <hr>
+            <span class="blue-title">portuguese:</span>
+            <button id="btShowReversoPtPhr" onclick="showPtPhr('Reverso');">+</button>
+            <button id="btHideReversoPtPhr" onclick="hidePtPhr('Reverso');" style="display:none">-</button>
+            <br>
+            <span id="ptReversoPhrases" style="display:none">{{reverso-phrases-pt}}</span>
+            <hr>
+        </div>
+
+        <div id="dvCollinsPhrases">
+            <div style="text-align:center;">
+                <span class="blue-title">collins phrases: </span>
+            </div>
+            <br>
+            <hr>
+            <span class="blue-title">english:</span>
+				<button id="btShowCollinsDetailsPhrases" onclick="showCollinsDetailsPhrases()">+</button>
+				<button id="btHideCollinsDetailsPhrases" onclick="hideCollinsDetailsPhrases()">-</button>
+            <br>
+            <span id="enCollinsPhrases">{{collins-phrases}}</span>
+            <hr>
+            <span class="blue-title">portuguese:</span>
+            <br>
+            <span id="ptCollinsPhrases">{{collins-phrases-pt}}</span>
+            <hr>
+        </div>
+
+        <div id="dvWordreferencePhrases">
+            <div style="text-align:center;">
+                <span class="blue-title">Wordreference phrases: </span>
+            </div>
+            <br>
+            <hr>
+            <span class="blue-title">english:</span>
+			<button id="btShowWordreferenceDetailsPhrases" onclick="showWordreferenceDetailsPhrases()">+</button>
+			<button id="btHideWordreferenceDetailsPhrases" onclick="hideWordreferenceDetailsPhrases()">-</button>
+            <br>
+            <span id="enWordreferencePhrases">{{wordreference-phrases}}</span>
+            <hr>
+        </div>
+
+		<div id="dvCambridgePhrases">
+            <div style="text-align:center;">
+                <span class="blue-title">Cambridge phrases: </span>
+            </div>
+            <br>
+            <hr>
+            <span class="blue-title">english:</span>
+			<button id="btShowCambridgeDetailsPhrases" onclick="showCambridgeDetailsPhrases()">+</button>
+			<button id="btHideCambridgeDetailsPhrases" onclick="hideCambridgeDetailsPhrases()">-</button>
+            <br>
+            <span id="enCambridgePhrases">{{cambridge-phrases}}</span>
+            <hr>
+        </div>
+
+	</div>
+
+
+        <div style="text-align:center;">
+            <span class="blue-title">audio: </span>
+        </div>
+        <span class="blue-title">us:</span>
+            {{en-us-mp3}}{{cambridge-en-us-mp3}}{{thesaurus-en-us-mp3}} 
+        <br>
+        <span class="blue-title">uk:</span>
+            {{howjsay-mp3}}{{en-uk-mp3}}
+        <br>
+
+<script>
+    window.onload = loadScripts();
+</script>
+
+</html>

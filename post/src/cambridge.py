@@ -1,7 +1,23 @@
 import workfiles
 
-workfiles.dictionary = 'cambridge'
-workfiles.word_list = '1001-2000'
+def rem_spaces_between_translations():
+    print('remove spaces between comma in translations')
+    rd = workfiles.read_lasttmp_or_output()
+    cnt = workfiles.new_tmpfile()
+    while True:
+        line = rd.readline()
+        line = line[:-1]
+        if not line :
+            break
+        line = line.replace('\n','')
+        fields = line.split('\t')
+        fields[1] = fields[1].replace(', ',',')
+        if len(fields) >= 5:
+            newline = fields[0]+'\t'+fields[1]+'\t'+fields[2]+'\t'+fields[3]+'\t'+fields[4]+'\n'
+        else:
+            newline = fields[0]+'\t'+fields[1]+'\t'+fields[2]+'\t'+fields[3]+'\t\n'
+        workfiles.write_tmpfile(cnt,newline,'a')
+    rd.close()
 
 def is_firstfield_equals_word():
     print('is first field equals word?')
@@ -32,6 +48,7 @@ def organize_definitions_with_n():
         line = rd.readline()
         if not line :
             break
+        line = line.replace('\n','')
         fields = line.split('\t')
         fields[4] = fields[4].replace('. ,','. ')
         newline = fields[0]+'\t'+fields[1]+'\t'+fields[2]+'\t'+fields[3]+'\t'+fields[4]+'\n'
@@ -46,7 +63,7 @@ def organize_definitions_without_n():
         line = rd.readline()
         if not line :
             break
-        line = line[:-1]
+        line = line.replace('\n','')
         fields = line.split('\t')
         if fields[4].strip() != '':
             fields[4] = '1. '+fields[4]
@@ -79,7 +96,6 @@ def clean_ipa():
         ipa = ipa.replace('/<span','<span')
         ipa = ipa.replace('</span>/','</span>')
         pt = fields[1]
-        pt = pt.replace(',',', ')
         fields[2] = ipa
         fields[1] = pt
         workfiles.write_tmpfile(cnt,'\t'.join(fields)+'\n','a')
@@ -93,7 +109,7 @@ def sound_mp3_directory():
         line = rd.readline()
         if not line :
             break
-        line = line[:-1]
+        line = line.replace('\n','')
         fields = line.split('\t')
         fields[3] = workfiles.add_wordlist_dictionary_soundmp3(fields[3])
         newline = fields[0]+'\t'+fields[1]+'\t'+fields[2]+'\t'+fields[3]+'\t'+fields[4]+'\n'
@@ -108,7 +124,7 @@ def remove_wordlist_from_soundname():
         line = rd.readline()
         if not line :
             break
-        line = line[:-1]
+        line = line.replace('\n','')
         fields = line.split('\t')
         fields[3] = fields[3].replace(workfiles.word_list+'-','')
         newline = fields[0]+'\t'+fields[1]+'\t'+fields[2]+'\t'+fields[3]+'\t'+fields[4]+'\n'
@@ -116,18 +132,25 @@ def remove_wordlist_from_soundname():
     rd.close()
 
 
-workfiles.rem_tmpfiles()
-valid = workfiles.validate_number_tabs(3)
-if valid == True:
-    if is_firstfield_equals_word() == False:
-        cnt=workfiles.get_last_tmpcnt()
-        cnt=cnt+1
-        workfiles.add_word_to_firstfield(cnt)
-valid = workfiles.validate_number_tabs(4)
-if valid == True:
-    clean_ipa()
-    remove_wordlist_from_soundname()
-    sound_mp3_directory()
-    organize_definitions()
-    workfiles.treat_line1001()
-    workfiles.rem_tmpfiles_create_outfile()
+def initialize(dictionary, word_list):
+    workfiles.word_list = word_list
+    workfiles.dictionary = dictionary
+
+def start():
+    workfiles.rem_tmpfiles()
+    valid = workfiles.validate_number_tabs(3)
+    if valid == True:
+        if is_firstfield_equals_word() == False:
+            cnt=workfiles.get_last_tmpcnt()
+            cnt=cnt+1
+            workfiles.add_word_to_firstfield(cnt)
+    valid = workfiles.validate_number_tabs(4)
+    if valid == True:
+        rem_spaces_between_translations()
+        clean_ipa()
+        #remove_wordlist_from_soundname()
+        sound_mp3_directory()
+        organize_definitions()
+        workfiles.treat_line1001()
+        workfiles.rem_tmpfiles_create_outfile()
+

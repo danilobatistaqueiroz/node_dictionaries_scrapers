@@ -18,39 +18,61 @@ const scraperObject = {
         return 'success';
     },
     async scrape(browser) {
-
+        files.initialize();
         let words = files.loadInputFile();
-
         const page = await browser.newPage();
-
         let sourceLang = 'en', targetLang = 'pt';
-
         let count = 0;
         let startLine = parseInt(json.startLine);
-        if(startLine==0){
-            if(files.exists()) {
-                files.appendLog('',fail,'arquivo existente!');
-                return;
+        if(files.exists()) {
+            let cntwords = files.getWordsInFile();
+            if(cntwords <= 1){
+                console.log(`arquivo ${files.outputFile} vazio!`);
+            } else if(cntwords > 1){
+                console.log(`arquivo ${files.outputFile} com ${cntwords} linhas!`);
+                if(cntwords > 999)
+                    return
+                startLine = cntwords+1
             }
+        }
+        let cntWords = files.getWordsInFile();
+        if ( (cntWords+1)!=startLine ){
+            console.log(`linhas no arquivo:${cntWords}`);
+            files.appendLog('',fail,'arquivo com numero de linhas incompativel ao informado!');
+            return
+        }
+
+        if(startLine==0){
             files.initializeLog();
             files.initializeFile();
         }
+
         let ini = new Date()
         files.appendLog('','',dateFormat(ini, "h:MM:ss l"));
         
         await page.goto(`https://translate.google.com/#view=home&op=translate&sl=${sourceLang}&tl=${targetLang}`);
         await page.focus('textarea[class="er8xn"]');
 
+        let endLine = parseInt(json.endLine);
         for (let word of words) {
+
+            await util.delay(2000);
+            
+            console.log(word);
             count++;
             if (count < startLine) {
                 continue;
             }
-            console.log(word);
-
+            if(count > endLine) {
+                break;
+            }
             if(util.isCapitalized(word)){
-                console.log(colors.red('capitalized'));
                 files.appendLog(word,'fail','capitalized');
+                files.appendFile(word+'\t\n');
+                continue;
+            }
+            if(word.length<=3){
+                files.appendLog(word,'fail','tres ou menos');
                 files.appendFile(word+'\t\n');
                 continue;
             }
@@ -84,50 +106,62 @@ const scraperObject = {
                 }
             }
 
-            const mainTranslations = await page.evaluate(() => {
-                let main = document.querySelectorAll('.VIiyi');
-                let sexs = document.querySelectorAll('.NlvNvf');
-                list = [];
-                let term;
-                if(sexs != null && sexs.length==2) {
-                    term = main[1];
-                } else {
-                    term = main[0];
-                }
-                if (term.childNodes[0].nodeName != '#text') {
-                    let wordsTr = document.querySelectorAll('span[jsname="W297wb"]');
-                    wordsTr.forEach((w) => {
-                        list.push({"text":w.innerText,"frequency":undefined});
-                    });
-                } else {
-                    list.push({"text":term.innerText,"frequency":undefined});
-                }
-                return list;
-            });
-
-            const otherTranslations = await page.evaluate(() => {
-                let others = document.querySelectorAll('.KnIHac');
-                let blocks = document.querySelectorAll('.YF3enc');
-                list = [];
-                for(let o = 0; o < others.length; o++) {
-                    frequency = 0;
-                    let block1 = blocks[o].childNodes[0];
-                    let block2 = blocks[o].childNodes[1];
-                    let block3 = blocks[o].childNodes[2];
-                    let blockGray = 'fXx9Lc';
-                    if (block1.classList[1] == blockGray) {
-                        frequency = 0;
-                    } else if (block2.classList[1] == blockGray) {
-                        frequency = 1;
-                    } else if (block3.classList[1] == blockGray) {
-                        frequency = 2;
+            let mainTranslations = [];
+            try{
+                mainTranslations = await page.evaluate(() => {
+                    let main = document.querySelectorAll('.VIiyi');
+                    let sexs = document.querySelectorAll('.NlvNvf');
+                    list = [];
+                    let term;
+                    if(sexs != null && sexs.length==2) {
+                        term = main[1];
                     } else {
-                        frequency = 3;
+                        term = main[0];
                     }
-                    list.push({"text":others[o].textContent,"frequency":frequency});
-                }
-                return list;
-            });
+                    if (term.childNodes[0].nodeName != '#text') {
+                        let wordsTr = document.querySelectorAll('span[jsname="W297wb"]');
+                        wordsTr.forEach((w) => {
+                            list.push({"text":w.innerText,"frequency":undefined});
+                        });
+                    } else {
+                        list.push({"text":term.innerText,"frequency":undefined});
+                    }
+                    return list;
+                });
+            } catch (ex){
+                console.log(colors.red(ex));
+            }
+
+            await util.delay(1000);
+
+            let otherTranslations = [];
+            try{
+                otherTranslations = await page.evaluate(() => {
+                    let others = document.querySelectorAll('.KnIHac');
+                    let blocks = document.querySelectorAll('.YF3enc');
+                    list = [];
+                    for(let o = 0; o < others.length; o++) {
+                        frequency = 0;
+                        let block1 = blocks[o].childNodes[0];
+                        let block2 = blocks[o].childNodes[1];
+                        let block3 = blocks[o].childNodes[2];
+                        let blockGray = 'fXx9Lc';
+                        if (block1.classList[1] == blockGray) {
+                            frequency = 0;
+                        } else if (block2.classList[1] == blockGray) {
+                            frequency = 1;
+                        } else if (block3.classList[1] == blockGray) {
+                            frequency = 2;
+                        } else {
+                            frequency = 3;
+                        }
+                        list.push({"text":others[o].textContent,"frequency":frequency});
+                    }
+                    return list;
+                });
+            } catch (ex){
+                console.log(colors.red(ex));
+            }
 
             if(otherTranslations.length==0 && mainTranslations.length==0){
                 console.log(colors.red('nao encontrou tradução'));

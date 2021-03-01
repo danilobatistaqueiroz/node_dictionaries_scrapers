@@ -22,23 +22,21 @@ const howjsay = {
         } else {
             url = `https://howjsay.com/how-to-pronounce-${word}`;
         }
-        const response = await page.goto(url);
-        const chain = response.request().redirectChain();
-        if(chain.length==1){
-            return {"result":fail,"reason":'redirect'};
-        }
+        
+        let response = ''
         try{
-            await page.waitForSelector(selector);
+            response = await page.goto(url);
         } catch (err) {
             return {"result":fail,"reason":'timeout'};
         }
+        
         return {"result":success,"reason":'ok'};
     },
     getTimeout(){
         if(json.env=='test')
             return 500;
         else
-            return 10000;
+            return 7000;
     },
     getFileName (str) {
         return str.substring(str.lastIndexOf('/')+1).replace(' ','');
@@ -61,7 +59,7 @@ const scraperObject = {
     async getContent(page, word, selector){
         let result = await howjsay.queryAuto(page, word, selector);
         if(result.result==fail){
-            console.log(colors.red('fail:'+result.reason));
+            console.log(colors.red('howjsay - fail:'+result.reason));
             return '';
         }
         let html = await page.content();
@@ -69,41 +67,57 @@ const scraperObject = {
         return content;
     },
     async scrape(browser){
+        console.log('iniciando scrape');
+        files.initialize();
         let words = files.loadInputFile();
         let page = await browser.newPage();
         await page.setDefaultTimeout(howjsay.getTimeout());
         await page.setDefaultNavigationTimeout(howjsay.getTimeout());
+
         let selector = '.alphContain.list-grid';
 
         let count = 0;
-        let startLine = parseInt(json.startLine);
-        if(startLine==0){
-            if(files.exists()) {
-                files.appendLog('',fail,'arquivo existente!');
-                return;
+        let startLine = 0;
+        if(files.exists()) {
+            let cntwords = files.getWordsInFile();
+            if(cntwords <= 1){
+                console.log(`arquivo ${files.outputFile} vazio!`);
+            } else if(cntwords > 1){
+                console.log(`arquivo ${files.outputFile} com ${cntwords} linhas!`);
+                if(cntwords > 999)
+                    return
+                startLine = cntwords+1
             }
+        }
+
+        if(startLine==0){
             files.initializeLog();
             files.initializeFile();
         }
+
         let ini = new Date()
         files.appendLog('','',dateFormat(ini, "h:MM:ss l"));
 
+        let endLine = parseInt(json.endLine);
         for(let word of words){
+            console.log(word);
             count++;
             if(count < startLine) {
                 continue;
             }
-            console.log(word);
+            if(count > endLine) {
+                break;
+            }
             let content = await this.getContent(page,word,selector);
-            await util.delay(1500);
+            await util.delay(500);
             if(content == null || content==''){
-                console.log(colors.red('nao encontrou'));
+                console.log(colors.red('howjsay - nao encontrou'));
                 files.appendLog(word,fail,'nao encontrou');
                 files.appendFile(word+'\t');
                 files.appendNewLineFile();
                 continue;
             }
-            await util.delay(1500);
+            await util.delay(500);
             let zero = content.querySelector('.zeroResult');
             if(zero!=null){
                 console.log(colors.red('zero resultados'));
@@ -121,18 +135,16 @@ const scraperObject = {
                 files.appendNewLineFile();
                 continue;
             }
-            await util.delay(1500);
             let filemp3 = content.querySelector('source').src
             howjsay.downloadMp3(filemp3);
-            await util.delay(1500);
             let fieldsound = howjsay.setMp3Field(filemp3);
             files.appendFile(word+'\t'+fieldsound);
             files.appendNewLineFile();
-            await util.delay(1500);
+            await util.delay(500);
         }
         let end = new Date()
         files.appendLog('','',dateFormat(end, "h:MM:ss l"));
-        files.appendLog('','','total de palavras:'+count);
+        files.appendLog('','','howjsay - total de palavras:'+count);
     },
     getSleep(seconds){
         if(json.env=='test')

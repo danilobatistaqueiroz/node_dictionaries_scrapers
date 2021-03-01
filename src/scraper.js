@@ -8,42 +8,25 @@ const json = require('../config.json');
 
 const scraperObject = {
     async scrape(browser){
-        if( json.site == '3') {
-            console.log('iniciando reverso ' + json.fileName);
-            json.site = 'reverso';
-            await reverso.scrape(browser);
-            //console.log('iniciando google ' + json.fileName);
-            //json.site = 'google';
-            //await google.scrape(browser);
-            //console.log('iniciando linguee ' + json.fileName);
-            //json.site = 'linguee';
-            //await linguee.scrape(browser);
-            console.log('iniciando howjsay ' + json.fileName);
-            json.site = 'howjsay';
-            await howjsay.scrape(browser);
-            console.log('iniciando cambridge ' + json.fileName);
-            json.site = 'cambridge';
-            await cambridge.scrape(browser);
-        } else if (json.site == '3x3'){
-            let ini = 23001;
-            let end = 24000;
-            for(let i = 1; i <= 3; i++){
-                ini+=1000;
-                end+=1000;
+        if( json.site == '1x'){
+            let slash = json.fileName.indexOf('-')
+            let ini = parseInt(json.fileName.substring(0,slash));
+            let len = json.fileName.length;
+            let end = parseInt(json.fileName.substring(slash+1,len));
+            console.log(ini, end);
+            for(let i = 1; i <= 40; i++){
                 json.fileName = ini.toString()+'-'+end.toString();
-
-                console.log('iniciando reverso ' + json.fileName);
-                json.site = 'reverso';
-                await reverso.scrape(browser);
-                console.log('iniciando cambridge ' + json.fileName);
-                json.site = 'cambridge';
-                await cambridge.scrape(browser);
                 console.log('iniciando howjsay ' + json.fileName);
                 json.site = 'howjsay';
                 await howjsay.scrape(browser);
+                ini+=1000;
+                end+=1000;
+                json.startLine = 0
+                if(ini == 41000)
+                    break;
+                if(end == 41000)
+                    end = 41284;
             }
-        } else {
-            return eval(`(${json.site})`).scrape(browser);
         }
     }
 }

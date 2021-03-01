@@ -1,0 +1,346 @@
+<style>
+    *{text-align:center;}
+    </style>
+    <font color="#3ff"><b>{{word}}</b></font>
+    <hr> 
+    <font color="#3ff"><b>us-ipa: </b></font>
+     {{tophonetic-en-us-ipa}} 
+    &nbsp;
+     {{thesaurus-en-us-ipa}} 
+    &nbsp;
+     {{cambridge-en-us-ipa}} 
+    &nbsp;
+     {{upondn-ipa}} 
+    &nbsp;
+     {{freedic-ipa}} 
+    &nbsp;
+     {{macmillan-ipa}}
+    <br>
+    <font color="#3ff"><b>en-us-mp3:</b></font> {{en-us-mp3}} {{thesaurus-en-us-mp3}} {{cambridge-en-us-mp3}}
+    <hr>
+    <font color="#3ff"><b>uk-ipa: </b></font> {{yandex-en-uk-ipa}} 
+    <br>
+    <font color="#3ff"><b>howjsay-mp3:</b></font> {{howjsay-mp3}}
+    <br>
+    <font color="#3ff"><b>en-uk-mp3:</b></font> {{en-uk-mp3}}
+    <hr>
+    <button id="btShowOtherDetailsPhrases" onclick="showOtherDetailsPhrases()">+</button>
+    <button id="btHideOtherDetailsPhrases" onclick="hideOtherDetailsPhrases()">-</button>
+    <div id="enOtherPhrases" style="display:block">{{en-phrases}}</div>
+    <br>
+    <button id="btShowMacmillanDetailsPhrases" onclick="showMacmillanDetailsPhrases()">+</button>
+    <button id="btHideMacmillanDetailsPhrases" onclick="hideMacmillanDetailsPhrases()">-</button>
+    <div id="enMacmillanPhrases" style="display:block">{{macmillan-phrases}}</div>
+    <br>
+    <div id="pons-phrases" style="display:block">{{pons-phrases}}</div>
+    <br>
+    <button id="btShowFreedicDetailsPhrases" onclick="showFreedicDetailsPhrases()">+</button>
+    <button id="btHideFreedicDetailsPhrases" onclick="hideFreedicDetailsPhrases()">-</button>
+    <div id="enFreedicPhrases" style="display:block">{{freedic-phrases}}</div>
+    <br>
+    <div id="reverso-phrases" style="display:block">{{reverso-phrases}}</div>
+    <br>
+    <button id="btShowCollinsDetailsPhrases" onclick="showCollinsDetailsPhrases()">+</button>
+    <button id="btHideCollinsDetailsPhrases" onclick="hideCollinsDetailsPhrases()">-</button>
+    <div id="enCollinsPhrases" style="display:block">{{collins-phrases}}</div>
+    <br>
+    <button id="btShowWordreferenceDetailsPhrases" onclick="showWordreferenceDetailsPhrases()">+</button>
+    <button id="btHideWordreferenceDetailsPhrases" onclick="hideWordreferenceDetailsPhrases()">-</button>
+    <div id="enWordreferencePhrases" style="display:block">{{wordreference-phrases}}</div>
+    <br>
+    <button id="btShowCambridgeDetailsPhrases" onclick="showCambridgeDetailsPhrases()">+</button>
+    <button id="btHideCambridgeDetailsPhrases" onclick="hideCambridgeDetailsPhrases()">-</button>
+    <div id="enCambridgePhrases" style="display:block">{{cambridge-phrases}}</div>
+    <br>
+    <button id="btShowLingueeDetailsPhrases" onclick="showLingueeDetailsPhrases()">+</button>
+    <button id="btHideLingueeDetailsPhrases" onclick="hideLingueeDetailsPhrases()">-</button>
+    <div id="enLingueePhrases" style="display:block">{{linguee-phrases}}</div>
+    
+    <script>
+    function hideOldFreedicTranslation(){
+        html = document.getElementById('enFreedicPhrases').innerHTML;
+        html = html.replace(/<i><u>\s*([\w→çã ]*)\s*<\/u><\/i>/gi, '');
+        document.getElementById('enFreedicPhrases').innerHTML = html;
+    }
+    function hideFreedicTranslation(){
+        html = document.getElementById('enFreedicPhrases').innerHTML;
+        html = replaceTranslation(html);
+        document.getElementById('enFreedicPhrases').innerHTML = html;
+    }
+    function hideOldFreedicExplanation(){
+        html = document.getElementById('enFreedicPhrases').innerHTML;
+        html = html.replace(/(\d+).\s([\w\s\.\;\,\:\-\_\!\?\+\|\=\*\(\)\[\]\{\}\'\d]+).\s+/gi, '');
+        document.getElementById('enFreedicPhrases').innerHTML = html;
+    }
+    function hideFreedicExplanation(){
+        html = document.getElementById('enFreedicPhrases').innerHTML;
+        html = html.replace(/<font color="#c7c7c7"><i>([\w\s\.\;\,\:\-\_\!\?\+\–\|\=\*\(\)\[\]\{\}\'\d]+)/gi,'');
+        document.getElementById('enFreedicPhrases').innerHTML = html;
+    }
+    function hideFreedicDetailsPhrases(){
+        hideFreedicTranslation();
+        hideFreedicExplanation();
+        hideOldFreedicTranslation();
+        hideOldFreedicExplanation();
+    }
+    function showFreedicDetailsPhrases(){
+        document.getElementById('enFreedicPhrases').innerHTML = fullFreedicPhrase;
+    }
+    
+    function hideMacmillanDetailsPhrases(){
+        hideMacmillanExplanation();
+        hideMacmillanTrsPhrase();
+        hideMacmillanTranslation();
+    }
+    function hideMacmillanTranslation(){
+        html = document.getElementById('enMacmillanPhrases').innerHTML;
+        html = replaceTranslation(html);
+        document.getElementById('enMacmillanPhrases').innerHTML = html;
+    }
+    function hideMacmillanExplanation(){
+        html = document.getElementById('enMacmillanPhrases').innerHTML;
+        html = replaceExplanation(html);
+        document.getElementById('enMacmillanPhrases').innerHTML = html;
+    }
+    function hideMacmillanTrsPhrase(){
+        html = document.getElementById('enMacmillanPhrases').innerHTML;
+        html = replaceTrsPhrase(html);
+        document.getElementById('enMacmillanPhrases').innerHTML = html;
+    }
+    function showMacmillanDetailsPhrases(){
+        document.getElementById('enMacmillanPhrases').innerHTML = fullMacmillanPhrase;
+    }
+    
+    function hideWordreferenceTranslation(){
+        html = document.getElementById('enWordreferencePhrases').innerHTML;
+        html = html.replace(/<i><u><font color="#aa4444">[a-zA-Z0-9_@.-ç, ]*<\/font><\/u><\/i>/gi, '');
+        document.getElementById('enWordreferencePhrases').innerHTML = html;
+    }
+    function hideWordreferenceTrsPhrase(){
+        html = document.getElementById('enWordreferencePhrases').innerHTML;
+        html = replaceTrsPhrase(html);
+        document.getElementById('enWordreferencePhrases').innerHTML = html;
+    }
+    function hideWordreferenceExplanation(){
+        html = document.getElementById('enWordreferencePhrases').innerHTML;
+        html = replaceExplanation(html);
+        document.getElementById('enWordreferencePhrases').innerHTML = html;
+    }
+    function hideWordreferenceDetailsPhrases(){
+        hideWordreferenceExplanation();
+        hideWordreferenceTranslation();
+        hideWordreferenceTrsPhrase();
+    }
+    function showWordreferenceDetailsPhrases(){
+        document.getElementById('enWordreferencePhrases').innerHTML = fullWordreferencePhrase;
+    }
+    
+    
+    function hideCambridgeDetailsPhrases(){
+        hideCambridgeExplanation();
+        hideCambridgeTrsPhrase();
+    }
+    function hideCambridgeExplanation(){
+        html = document.getElementById('enCambridgePhrases').innerHTML;
+        html = replaceExplanation(html);
+        document.getElementById('enCambridgePhrases').innerHTML = html;
+    }
+    function hideCambridgeTrsPhrase(){
+        html = document.getElementById('enCambridgePhrases').innerHTML;
+        html = replaceTrsPhrase(html);
+        document.getElementById('enCambridgePhrases').innerHTML = html;
+    }
+    function showCambridgeDetailsPhrases(){
+        document.getElementById('enCambridgePhrases').innerHTML = fullCambridgePhrase;
+    }
+    
+    
+    function hideCollinsDetailsPhrases(){
+        hideCollinsExplanation();
+        hideCollinsTrsPhrase();
+        hideCollinsTranslation();
+    }
+    function hideCollinsTranslation(){
+        html = document.getElementById('enCollinsPhrases').innerHTML;
+        html = replaceTranslation(html);
+        document.getElementById('enCollinsPhrases').innerHTML = html;
+    }
+    function hideCollinsExplanation(){
+        html = document.getElementById('enCollinsPhrases').innerHTML;
+        html = replaceExplanation(html);
+        document.getElementById('enCollinsPhrases').innerHTML = html;
+    }
+    function hideCollinsTrsPhrase(){
+        html = document.getElementById('enCollinsPhrases').innerHTML;
+        html = replaceTrsPhrase(html);
+        document.getElementById('enCollinsPhrases').innerHTML = html;
+    }
+    function showCollinsDetailsPhrases(){
+        document.getElementById('enCollinsPhrases').innerHTML = fullCollinsPhrase;
+    }
+    
+    
+    function hideLingueeDetailsPhrases(){
+        hideLingueeExplanation();
+        hideLingueeTrsPhrase();
+        hideLingueeTranslation();
+    }
+    function hideLingueeTranslation(){
+        html = document.getElementById('enLingueePhrases').innerHTML;
+        html = replaceTranslation(html);
+        document.getElementById('enLingueePhrases').innerHTML = html;
+    }
+    function hideLingueeExplanation(){
+        html = document.getElementById('enLingueePhrases').innerHTML;
+        html = replaceExplanation(html);
+        document.getElementById('enLingueePhrases').innerHTML = html;
+    }
+    function hideLingueeTrsPhrase(){
+        html = document.getElementById('enLingueePhrases').innerHTML;
+        html = replaceTrsPhrase(html);
+        document.getElementById('enLingueePhrases').innerHTML = html;
+    }
+    function showLingueeDetailsPhrases(){
+        document.getElementById('enLingueePhrases').innerHTML = fullLingueePhrase;
+    }
+    
+    
+    function hideOtherDetailsPhrases(){
+        hideOtherExplanation();
+        hideOtherTrsPhrase();
+        hideOtherTranslation();
+    }
+    function hideOtherTranslation(){
+        html = document.getElementById('enOtherPhrases').innerHTML;
+        html = replaceTranslation(html);
+        html = replaceExplanationRGB(html);
+        document.getElementById('enOtherPhrases').innerHTML = html;
+    }
+    function hideOtherExplanation(){
+        html = document.getElementById('enOtherPhrases').innerHTML;
+        html = replaceExplanation(html);
+        document.getElementById('enOtherPhrases').innerHTML = html;
+    }
+    function hideOtherTrsPhrase(){
+        html = document.getElementById('enOtherPhrases').innerHTML;
+        html = replaceTrsPhrase(html);
+        document.getElementById('enOtherPhrases').innerHTML = html;
+    }
+    function showOtherDetailsPhrases(){
+        document.getElementById('enOtherPhrases').innerHTML = fullOtherPhrase;
+    }
+    
+    function replaceTrsPhrase(html){
+        let i = 0;
+        while (i >= 0) {
+            i = html.indexOf('<i>"',i);
+            if (i==-1)
+                return html;
+            let e = html.indexOf('"</i>',i);
+            if (e==-1)
+                return html;
+            let ini = html.substring(0,i-1);
+            let end = html.substring(e,html.length);
+            html = ini+" <BR>''"+end;
+        }
+    }
+    function replaceExplanationRGB(html){
+        let i = 0;
+        while (i >= 0) {
+            i = html.indexOf('<i style="color: rgb(199, 199, 199);">',i);
+            if (i==-1)
+                return html;
+            let e = html.indexOf('</i>',i);
+            if (e==-1)
+                return html;
+            let ini = html.substring(0,i);
+            let end = html.substring(e,html.length);
+            html = ini+end;
+        }
+    }
+    function replaceExplanation(html){
+        let i = 0;
+        while (i >= 0) {
+            i = html.indexOf('<font color="#c7c7c7"><i>',i);
+            if (i==-1)
+                return html;
+            let e = html.indexOf('</i></font>',i);
+            if (e==-1)
+                return html;
+            let ini = html.substring(0,i);
+            let end = html.substring(e,html.length);
+            html = ini+end;
+        }
+    }
+    function replaceTranslation(html){
+        startTag = '<i><u><font color="#aa4444">';
+        let i = 0;
+        while (i >= 0) {
+            i = html.indexOf(startTag,i+1);
+            beginningText = startTag.length+i;
+            if (i==-1)
+                return html;
+            let endText = html.indexOf('</font></u></i>',i);
+            if (endText==-1)
+                return html;
+            let ini = html.substring(0,beginningText);
+            let end = html.substring(endText,html.length);
+            hidden = "_".repeat(endText-beginningText);
+            html = ini+hidden+end;
+        }
+    }
+    
+    function load(){
+        fullFreedicPhrase = document.getElementById('enFreedicPhrases').innerHTML;
+        if (fullFreedicPhrase.trim() == ''){
+            document.getElementById('btShowFreedicDetailsPhrases').style.display='none';
+            document.getElementById('btHideFreedicDetailsPhrases').style.display='none';
+        }
+        hideFreedicDetailsPhrases();
+    
+        fullMacmillanPhrase = document.getElementById('enMacmillanPhrases').innerHTML;
+        if (fullMacmillanPhrase.trim() == ''){
+            document.getElementById('btShowMacmillanDetailsPhrases').style.display='none';
+            document.getElementById('btHideMacmillanDetailsPhrases').style.display='none';
+        }
+        hideMacmillanDetailsPhrases();
+    
+        fullWordreferencePhrase = document.getElementById('enWordreferencePhrases').innerHTML;
+        if (fullWordreferencePhrase.trim() == ''){
+            document.getElementById('btShowWordreferenceDetailsPhrases').style.display='none';
+            document.getElementById('btHideWordreferenceDetailsPhrases').style.display='none';
+        }
+        hideWordreferenceDetailsPhrases();
+    
+        fullCambridgePhrase = document.getElementById('enCambridgePhrases').innerHTML;
+        if (fullCambridgePhrase.trim() == ''){
+            document.getElementById('btShowCambridgeDetailsPhrases').style.display='none';
+            document.getElementById('btHideCambridgeDetailsPhrases').style.display='none';
+        }
+        hideCambridgeDetailsPhrases();
+    
+        fullCollinsPhrase = document.getElementById('enCollinsPhrases').innerHTML;
+        if (fullCollinsPhrase.trim() == ''){
+            document.getElementById('btShowCollinsDetailsPhrases').style.display='none';
+            document.getElementById('btHideCollinsDetailsPhrases').style.display='none';
+        }
+        hideCollinsDetailsPhrases();
+    
+        fullLingueePhrase = document.getElementById('enLingueePhrases').innerHTML;
+        if (fullLingueePhrase.trim() == ''){
+            document.getElementById('btShowLingueeDetailsPhrases').style.display='none';
+            document.getElementById('btHideLingueeDetailsPhrases').style.display='none';
+        }
+        hideLingueeDetailsPhrases();
+    
+        fullOtherPhrase = document.getElementById('enOtherPhrases').innerHTML;
+        if (fullOtherPhrase.trim() == ''){
+            document.getElementById('btShowOtherDetailsPhrases').style.display='none';
+            document.getElementById('btHideOtherDetailsPhrases').style.display='none';
+        }
+        hideOtherDetailsPhrases();
+    }
+    </script>
+    <script>
+        window.onload = load();
+    </script>

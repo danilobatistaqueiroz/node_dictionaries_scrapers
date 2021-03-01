@@ -20,28 +20,43 @@ const reverso = {
 
 const scraperObject = {
     async scrape(browser){
+        files.initialize();
         let words = files.loadInputFile();
         let page = await browser.newPage();
 
         let count = 0;
         let startLine = parseInt(json.startLine);
-        if(startLine==0){
-            if(files.exists()) {
-                files.appendLog('',util.result.fail,'arquivo existente!');
-                return;
+        if(files.exists()) {
+            let cntwords = files.getWordsInFile();
+            if(cntwords <= 1){
+                console.log(`arquivo ${files.outputFile} vazio!`);
+            } else if(cntwords > 1){
+                console.log(`arquivo ${files.outputFile} com ${cntwords} linhas!`);
+                if(cntwords > 999)
+                    return
+                startLine = cntwords+1
             }
+        }
+
+        if(startLine==0){
             files.initializeLog();
             files.initializeFile();
         }
+
         let ini = new Date()
         files.appendLog('','',dateFormat(ini, "h:MM:ss l"));
 
+        let endLine = parseInt(json.endLine);
         for(let word of words) {
             console.log(word);
             count++;
             if (count < startLine) {
                 continue;
             }
+            if(count > endLine) {
+                break;
+            }
+
             if(util.isCapitalized(word)){
                 files.appendFile('\t\n');
                 continue;
@@ -52,10 +67,11 @@ const scraperObject = {
             let url = `https://context.reverso.net/translation/english-${json.language}/${word}`;
             try{
                 await page.goto(url);
-                await page.setDefaultTimeout(4000);
-                await page.setDefaultNavigationTimeout(4000);
+                await page.setDefaultTimeout(8000);
+                await page.setDefaultNavigationTimeout(8000);
                 await page.waitForSelector('.results');
             } catch (err) {
+                console.log(colors.red('time out'));
                 files.appendFile('\t\n');
                 continue;
             }

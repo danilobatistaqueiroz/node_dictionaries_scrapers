@@ -54,6 +54,7 @@ const scraperObject = {
         return content;
     },
     async scrape(browser){
+        files.initialize();
         let words = files.loadInputFile();
         let page = await browser.newPage();
         let count = 0;
@@ -65,15 +66,28 @@ const scraperObject = {
             }
             files.initializeLog();
             files.initializeFile();
+        } else {
+            let cntWords = files.getWordsInFile();
+            if ( (cntWords+1)!=startLine ){
+                console.log(`linhas no arquivo:${cntWords}`);
+                files.appendLog('',fail,'arquivo com numero de linhas incompativel ao informado!');
+                return
+            }
+            json.startLine=0;
         }
         let ini = new Date()
         files.appendLog('','',dateFormat(ini, "h:MM:ss l"));
         let selector = '.autocompletion';
+
+        let endLine = parseInt(json.endLine);
         for(let word of words){
             console.log(word);
             count++;
             if (count < startLine) {
                 continue;
+            }
+            if(count > endLine) {
+                break;
             }
             await util.delay(3000);
             let content = await this.getContent(page,word,selector);

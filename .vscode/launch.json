@@ -21,6 +21,13 @@
                 "<node_internals>/**"
             ],
             "program": "${workspaceFolder}/html/cards/teste.js"
+        },
+        {
+            "type": "python",
+            "request": "launch",
+            "name": "Run Current File",
+            "program": "${file}",
+            "console": "integratedTerminal"
         }
     ]
 }

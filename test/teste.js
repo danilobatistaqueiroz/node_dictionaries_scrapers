@@ -1,14 +1,3 @@
-function removeLastCharIfCondition(text, charCondition){
-    if(text!=undefined && text!=null && text!=''){
-        text = text.trim();
-        let lastChar = text.charAt(text.length-1);
-        if(lastChar==charCondition){
-            return text.slice(0,-1);
-        }
-    }
-    return text;
-}
+let x = '01. Abandoned. <i><u><font color="#aa4444">extorquir</font></u></i> 02. <i><u><font color="#aa4444">fingir</font></u></i>'
 
-let x = 'abcdedifialsdkfsdfslk,';
-
-console.log(removeLastCharIfCondition(x,','));
+console.log(x.replace(/(\d+).\s(\w+).\s+/gi, ''));

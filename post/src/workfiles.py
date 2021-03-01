@@ -11,7 +11,9 @@ inputdir = '../../input'
 outputdir = '../../output'
 
 def rem_tmpfiles():
-    os.system(f'rm {tmp}/{word_list}-{dictionary}.tmp*')
+    files = [f for f in glob.glob(tmp + f'**/{word_list}-{dictionary}.tmp*', recursive=True)]
+    if len(files) > 0:
+        os.system(f'rm {tmp}/{word_list}-{dictionary}.tmp*')
     
 def rem_tmpfiles_create_outfile():
     cnt = get_last_tmpcnt()

@@ -1,9 +1,10 @@
 {
-    "fileName":"23001-24000",
+    "fileName":"2001-3000",
     "fileExt":"csv",
     "language":"portuguese",
-    "site":"3x3",
+    "site":"1x",
     "env":"real",
     "headless":true,
-    "startLine":0
+    "startLine":0,
+    "endLine": 1002
 }

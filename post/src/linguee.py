@@ -1,8 +1,9 @@
 import os
 import workfiles
+import config
 
 workfiles.dictionary = 'linguee'
-workfiles.word_list = '1001-2000'
+workfiles.word_list = config.word_list
 
 def remove_field_doesnt_match(word):
     print("""remove row where a field doesn't have any word matching in others dictionaries""")
