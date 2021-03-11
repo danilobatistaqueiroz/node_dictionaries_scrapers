@@ -66,9 +66,12 @@ def validate_number_tabs(ntabs):
         rows+=1
         if not line :
             break
+        if line == '\n':
+            continue
         if line.count('\t') != ntabs :
             word = line[:line.find('\t')]
             print(red('different number of tabs:'+str(line.count('\t'))+'-'+word))
+            print(line)
             return False
     tmp.close()
     print(blue('number of tabs ok'))

@@ -28,6 +28,14 @@
             "name": "Run Current File",
             "program": "${file}",
             "console": "integratedTerminal"
+        },
+        {
+            "type": "python",
+            "request": "launch",
+            "name": "Clean-One Puppeter",
+            "program": "${workspaceFolder}/post/src/clean-one.py",
+            "console": "integratedTerminal",
+            "cwd":"${workspaceFolder}/post/src"
         }
     ]
 }

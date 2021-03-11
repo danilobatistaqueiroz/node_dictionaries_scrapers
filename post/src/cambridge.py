@@ -1,5 +1,26 @@
 import workfiles
 
+def clean_definitions():
+    print('removing repeated numbers ex: 1. 1. and adding a break line for each item')
+    rd = workfiles.read_lasttmp_or_output()
+    cnt = workfiles.new_tmpfile()
+    while True:
+        line = rd.readline()
+        if not line :
+            break
+        line = line.replace('1. 1. ','1. ')
+        line = line.replace('2. 2. ','<BR> 2. ')
+        line = line.replace('3. 3. ','<BR> 3. ')
+        line = line.replace('4. 4. ','<BR> 4. ')
+        line = line.replace('5. 5. ','<BR> 5. ')
+        line = line.replace('6. 6. ','<BR> 6. ')
+        line = line.replace('7. 7. ','<BR> 7. ')
+        line = line.replace('8. 8. ','<BR> 8. ')
+        line = line.replace('9. 9. ','<BR> 9. ')
+        line = line.replace('..','.')
+        workfiles.write_tmpfile(cnt,line,'a')
+    rd.close()
+
 def rem_spaces_between_translations():
     print('remove spaces between comma in translations')
     rd = workfiles.read_lasttmp_or_output()
@@ -34,11 +55,30 @@ def definitions_startswith_number():
     print('verifying if definitions field starts with number')
     rd = workfiles.read_lasttmp_or_output()
     line = rd.readline()
+    rd.close()
     fields = line.split('\t')
     if fields[4].startswith('1.'):
         return True
     else:
         return False
+
+def organize_definitions_with_br():
+    rd = workfiles.read_lasttmp_or_output()
+    cnt = workfiles.new_tmpfile()
+    while True:
+        line = rd.readline()
+        if not line :
+            break
+        line = line.replace('\n','')
+        fields = line.split('\t')
+        fields[4] = fields[4].replace('. 2.','. <BR>2.')
+        fields[4] = fields[4].replace('. 3.','. <BR>3.')
+        fields[4] = fields[4].replace('. 4.','. <BR>4.')
+        fields[4] = fields[4].replace('. 5.','. <BR>5.')
+        fields[4] = fields[4].replace('. 6.','. <BR>6.')
+        #newline = fields[0]+'\t'+fields[1]+'\t'+fields[2]+'\t'+fields[3]+'\t'+fields[4]+'\n'
+        newline = fields[0]+'\t'+fields[4]+'\n'
+        workfiles.write_tmpfile(cnt,newline,'a')
     rd.close()
 
 def organize_definitions_with_n():
@@ -151,6 +191,8 @@ def start():
         #remove_wordlist_from_soundname()
         sound_mp3_directory()
         organize_definitions()
+        clean_definitions()
+        organize_definitions_with_br()
         workfiles.treat_line1001()
         workfiles.rem_tmpfiles_create_outfile()
 
