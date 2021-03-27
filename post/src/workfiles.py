@@ -133,7 +133,7 @@ def remove_last_comma():
 
 def add_wordlist_dictionary_soundmp3(sound_field):
     if sound_field.startswith('[sound:'):
-        return sound_field[0:7] + word_list +'/'+ dictionary +'/'+ sound_field[7:]
+        return sound_field[0:7] + word_list +'/'+ dictionary +'/'+ word_list + '-' + sound_field[7:]
     else:
         return sound_field
 

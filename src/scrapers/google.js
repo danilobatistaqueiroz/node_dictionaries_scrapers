@@ -38,7 +38,7 @@ const scraperObject = {
         let cntWords = files.getWordsInFile();
         if ( (cntWords+1)!=startLine ){
             console.log(`linhas no arquivo:${cntWords}`);
-            files.appendLog('',fail,'arquivo com numero de linhas incompativel ao informado!');
+            files.appendLog('',util.result.fail,'arquivo com numero de linhas incompativel ao informado!');
             return
         }
 

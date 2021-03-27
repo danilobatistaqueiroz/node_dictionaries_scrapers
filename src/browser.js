@@ -6,7 +6,8 @@ async function startBrowser () {
     let browser;
     try {
         browser = await puppeteer.launch({
-            headless: json.headless, 
+            //headless: json.headless, 
+            headless: false,
             args: [
                 `--disable-setuid-sandbox`,
                 //`--proxy-server=socks5://127.0.0.1:9050`
